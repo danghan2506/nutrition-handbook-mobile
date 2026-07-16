@@ -57,6 +57,7 @@ Desktop.ini
 .docs/
 .shared/
 .superpowers/
+.worktrees/
 
 # Local documentation and planning artifacts
 docs/
