@@ -9,6 +9,8 @@ describe('onboarding navigation', () => {
     expect(source).toContain('Animated.FlatList');
     expect(source).toContain('pagingEnabled');
     expect(source).toContain('scrollToIndex');
+    expect(source).toContain('setActiveIndex(nextIndex)');
+    expect(source).not.toContain('if (reduceMotion)');
     expect(source).toContain('OnboardingPagination');
     expect(source).toContain('markOnboardingCompleted');
     expect(source).toContain("router.replace('/(tabs)')");

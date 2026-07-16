@@ -97,9 +97,8 @@ export default function OnboardingScreen() {
       index: nextIndex,
     });
 
-    if (reduceMotion) {
-      setActiveIndex(nextIndex);
-    }
+    setActiveIndex(nextIndex);
+
   };
 
   return (
