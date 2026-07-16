@@ -1,0 +1,15 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+describe('onboarding startup gate', () => {
+  it('waits for persisted onboarding state before redirecting', () => {
+    const source = readFileSync(join(process.cwd(), 'app', 'index.tsx'), 'utf8');
+
+    expect(source).toContain('SplashScreen.preventAutoHideAsync');
+    expect(source).toContain('getInitialRoute');
+    expect(source).toContain('if (!destination)');
+    expect(source).toContain('return null');
+    expect(source).toContain('<Redirect href={destination} />');
+    expect(source).toContain('SplashScreen.hideAsync');
+  });
+});
