@@ -40,7 +40,9 @@ function ActivityNode({
 export function GentleHabitsIllustration({ activities }: GentleHabitsIllustrationProps) {
   return (
     <View
+      accessible
       accessibilityLabel="Ba thói quen được nối theo một vòng nhịp: ăn đúng bữa, uống đủ nước và nghỉ ngơi đúng lúc"
+      accessibilityRole="image"
       className="relative h-[302px] w-full max-w-[348px] self-center overflow-hidden rounded-[28px] bg-peach">
       <View className="absolute -right-[18px] -top-5 h-20 w-[106px] rotate-[8deg] bg-sunrise-wash opacity-55" />
 

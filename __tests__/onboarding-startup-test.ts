@@ -4,8 +4,10 @@ import { join } from 'node:path';
 describe('onboarding startup gate', () => {
   it('waits for persisted onboarding state before redirecting', () => {
     const source = readFileSync(join(process.cwd(), 'app', 'index.tsx'), 'utf8');
+    const layoutSource = readFileSync(join(process.cwd(), 'app', '_layout.tsx'), 'utf8');
 
-    expect(source).toContain('SplashScreen.preventAutoHideAsync');
+    expect(layoutSource).toContain('SplashScreen.preventAutoHideAsync');
+    expect(source).not.toContain('SplashScreen.preventAutoHideAsync');
     expect(source).toContain('getInitialRoute');
     expect(source).toContain('if (!destination)');
     expect(source).toContain('return null');

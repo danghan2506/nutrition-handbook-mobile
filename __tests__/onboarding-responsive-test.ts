@@ -18,4 +18,11 @@ describe('onboarding responsive slides', () => {
     expect(source).toContain('contentContainerStyle={{ flexGrow: 1 }}');
     expect(source).toContain('showsVerticalScrollIndicator={false}');
   });
+
+  it('realigns the pager when the viewport width changes', () => {
+    const source = readFileSync(join(process.cwd(), 'app', 'onboarding.tsx'), 'utf8');
+
+    expect(source).toContain('previousPageWidthRef');
+    expect(source).toContain('scrollX.value = activeIndex * pageWidth');
+  });
 });

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   type FlatList,
   Pressable,
@@ -41,6 +41,7 @@ export default function OnboardingScreen() {
   const { width: pageWidth } = useWindowDimensions();
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
   const completionPendingRef = useRef(false);
+  const previousPageWidthRef = useRef(pageWidth);
   const scrollX = useSharedValue(0);
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -55,6 +56,16 @@ export default function OnboardingScreen() {
       scrollX.value = event.contentOffset.x;
     },
   });
+
+  useEffect(() => {
+    if (previousPageWidthRef.current === pageWidth) {
+      return;
+    }
+
+    previousPageWidthRef.current = pageWidth;
+    listRef.current?.scrollToIndex({ animated: false, index: activeIndex });
+    scrollX.value = activeIndex * pageWidth;
+  }, [activeIndex, pageWidth, scrollX]);
 
   const completeOnboarding = async () => {
     if (completionPendingRef.current) {

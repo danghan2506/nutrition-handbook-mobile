@@ -15,10 +15,12 @@ export function VietnameseFoodAiIllustration({
 }: VietnameseFoodAiIllustrationProps) {
   return (
     <View
+      accessible
       accessibilityLabel="Tô phở bò trong khung camera tra cứu dinh dưỡng"
       accessibilityRole="image"
       className="relative h-[302px] overflow-hidden rounded-[28px] bg-peach">
       <Image
+        accessibilityLabel="Ảnh tô phở bò"
         contentFit="cover"
         source={images.vietnamesePho}
         style={{ height: '100%', width: '100%' }}

@@ -25,7 +25,9 @@ function BowlIcon({ tint }: { tint: MealTint }) {
 export function MealTrackingIllustration({ meals }: MealTrackingIllustrationProps) {
   return (
     <View
+      accessible
       accessibilityLabel="Minh hoạ ba bữa ăn: sáng, trưa và tối"
+      accessibilityRole="image"
       className="relative h-[302px] overflow-hidden rounded-[28px] bg-peach px-5 pb-7 pt-8">
       <View className="absolute right-7 top-7 size-[136px] rounded-full bg-sunrise-wash opacity-75" />
       <View className="absolute left-7 top-14 h-[38px] w-[124px] rounded-full bg-surface opacity-75" />

@@ -6,8 +6,6 @@ import { getInitialRoute } from '@/lib/onboarding-storage';
 
 type InitialDestination = Awaited<ReturnType<typeof getInitialRoute>>;
 
-void SplashScreen.preventAutoHideAsync();
-
 export default function Index() {
   const [destination, setDestination] = useState<InitialDestination | null>(null);
 
