@@ -1,5 +1,4 @@
 import { Redirect } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
 
 import { getInitialRoute } from '@/lib/onboarding-storage';
@@ -28,11 +27,6 @@ export default function Index() {
     };
   }, []);
 
-  useEffect(() => {
-    if (destination) {
-      void SplashScreen.hideAsync();
-    }
-  }, [destination]);
 
   if (!destination) {
     return null;

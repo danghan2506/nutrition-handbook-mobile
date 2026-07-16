@@ -7,11 +7,14 @@ describe('onboarding startup gate', () => {
     const layoutSource = readFileSync(join(process.cwd(), 'app', '_layout.tsx'), 'utf8');
 
     expect(layoutSource).toContain('SplashScreen.preventAutoHideAsync');
+    expect(layoutSource).toContain('usePathname');
+    expect(layoutSource).toContain("pathname !== '/'");
+    expect(layoutSource).toContain('SplashScreen.hideAsync');
     expect(source).not.toContain('SplashScreen.preventAutoHideAsync');
     expect(source).toContain('getInitialRoute');
     expect(source).toContain('if (!destination)');
     expect(source).toContain('return null');
     expect(source).toContain('<Redirect href={destination} />');
-    expect(source).toContain('SplashScreen.hideAsync');
+    expect(source).not.toContain('SplashScreen.hideAsync');
   });
 });
