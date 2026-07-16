@@ -4,7 +4,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack, usePathname } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
@@ -20,13 +20,13 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const pathname = usePathname();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (pathname !== '/') {
+    if (segments.length > 0) {
       void SplashScreen.hideAsync();
     }
-  }, [pathname]);
+  }, [segments]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
