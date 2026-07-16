@@ -15,3 +15,13 @@ export const gentleHabitsIntro = {
   step: 2,
   activities: ['Ăn đúng bữa', 'Uống đủ nước', 'Nghỉ ngơi đúng lúc'],
 } as const;
+
+export const vietnameseFoodAiIntro = {
+  eyebrow: 'Hiểu món ăn quen thuộc',
+  title: 'Khám phá dinh dưỡng trong món Việt',
+  body: 'Chụp món ăn để AI hỗ trợ nhận diện và tra cứu dinh dưỡng. Bạn luôn có thể xem lại và chỉnh sửa trước khi lưu.',
+  continueLabel: 'Bắt đầu',
+  skipLabel: 'Bỏ qua',
+  metrics: ['420 kcal', '26g đạm', '52g carb'],
+  lookupLabel: 'AI tra cứu',
+} as const;

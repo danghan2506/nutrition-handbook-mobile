@@ -7,5 +7,6 @@ describe('onboarding NativeWind compatibility', () => {
 
     expect(source).not.toContain('cssInterop');
     expect(source).toContain("<SafeAreaView style={{ flex: 1, backgroundColor: '#FFF9F0' }}>");
+    expect(source).toContain('<View style={{ width: pageWidth }}>');
   });
 });
