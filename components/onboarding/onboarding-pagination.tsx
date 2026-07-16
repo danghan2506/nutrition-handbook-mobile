@@ -41,8 +41,8 @@ export function OnboardingPagination({
 
   return (
     <View
-      accessibilityLabel="Màn hiện tại trong 3 màn giới thiệu"
-      accessibilityValue={{ text: `Màn ${activeIndex + 1} trên 3` }}
+      accessible
+      accessibilityLabel={`Màn ${activeIndex + 1} trên 3`}
       className="relative flex-row">
       {Array.from({ length: ONBOARDING_SLIDE_COUNT }, (_, index) => (
         <View key={index} className="h-2 w-6 items-center justify-center">
