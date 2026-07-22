@@ -8,7 +8,7 @@
 
 Add a calm, trustworthy login step between onboarding and the signed-in application. Login is required so future meal, habit, and health-note data can be associated with the user's account.
 
-This specification does not approve or implement an authentication backend, OAuth credentials, native provider SDKs, persistent session behavior, or health-data storage. Those decisions require separate user approval before implementation.
+The approved authentication architecture uses Supabase Auth, AURALE-owned React Native provider buttons, OAuth through the system browser, and Expo SecureStore for persistent session tokens. This specification does not approve OAuth credentials, database tables, or health-data storage.
 
 ## Approved flow
 
@@ -22,7 +22,7 @@ Onboarding → Login → Signed-in application
 - The login screen cannot be skipped and has no guest mode.
 - A successful authentication result opens the signed-in application.
 - A failed or cancelled authentication attempt keeps the user on the login screen.
-- Returning users with a valid session may bypass onboarding and login only after session behavior and persistence are separately approved.
+- Returning users with completed onboarding and a valid persisted session bypass login and open the signed-in application. Users whose onboarding state is incomplete still see onboarding first.
 
 ## Approved visual direction
 
@@ -104,26 +104,21 @@ The implementation should keep the route screen small and readable:
 - `components/auth/social-login-button.tsx`: reusable provider button presentation and accessibility behavior.
 - Authentication client/service: separate module selected only after the backend and provider approach is approved.
 
-Do not add a global auth store, session persistence, or route guard architecture until those choices are explicitly approved.
+Do not add Zustand or another global auth store for this feature. Supabase session persistence, its auth-state subscription, and focused route-level gates are sufficient.
 
 ## Authentication approach decision
 
-Supabase Auth is a viable backend for Google and Facebook social login, but it is not approved by this visual-design decision.
+Use Supabase Auth for Google and Facebook social authentication. Keep the approved AURALE-owned React Native buttons instead of Supabase web UI or provider-native button SDKs.
 
-Supabase's ready-made UI offering is primarily aimed at web React. For Expo/React Native, the recommended visual approach is to keep AURALE-owned React Native buttons and connect them to an approved authentication service behind the scenes.
+The approved implementation adds:
 
-Two implementation paths remain available:
+- `@supabase/supabase-js` for authentication and session management.
+- `expo-secure-store` for encrypted local storage of Supabase session tokens.
+- The already-installed `expo-web-browser` and `expo-linking` packages for OAuth browser sessions and redirects.
 
-1. **Custom AURALE buttons with an OAuth backend** — recommended for visual fidelity and consistent cross-platform layout.
-2. **Official native provider buttons/SDKs** — stronger provider-native presentation but introduces native dependencies, development-build requirements, and less visual control.
+OAuth opens in the system authentication browser and returns through an application deep link. Supabase persists the session through a SecureStore-compatible storage adapter. AsyncStorage remains limited to non-sensitive onboarding state.
 
-Before implementation, the user must explicitly approve:
-
-- Authentication backend, including whether to use Supabase.
-- OAuth flow versus native provider SDKs.
-- Required packages and native configuration.
-- Session persistence and sign-out behavior.
-- Redirect/deep-link configuration.
+OAuth client IDs, secrets, dashboard provider settings, redirect URLs, and production legal-link destinations must be supplied or approved before production authentication can succeed. Never expose provider secrets or a Supabase secret/service-role key in the mobile client.
 
 ## Interaction states
 
@@ -192,9 +187,8 @@ The future implementation is acceptable when:
 
 ## Out of scope
 
-- Selecting or configuring Supabase or another backend.
-- Creating OAuth applications or credentials.
-- Installing authentication packages or provider SDKs.
+- Creating or owning Google/Facebook OAuth applications and credentials.
+- Adding provider-native Google or Facebook button SDKs.
 - Adding database tables, profiles, RLS policies, analytics, or health-data persistence.
 - Designing account creation, account linking, sign-out, deletion, or recovery flows.
 - Implementing the screen in the application during the mockup phase.
