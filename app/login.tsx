@@ -147,17 +147,14 @@ export default function LoginScreen() {
               </Pressable>
               <Text className="text-[12px] text-soft-slate">và</Text>
               <Pressable
-                accessibilityLabel={loginCopy.privacy}
+                accessibilityLabel={loginCopy.privacy + loginCopy.legalEnd}
                 accessibilityRole="link"
                 className="min-h-11 justify-center px-2"
                 onPress={() => void openLegalUrl(process.env.EXPO_PUBLIC_PRIVACY_URL)}>
                 <Text className="text-[12px] font-bold text-ink-navy underline">
-                  {loginCopy.privacy}
+                  {loginCopy.privacy}{loginCopy.legalEnd}
                 </Text>
               </Pressable>
-              <Text className="text-[12px] text-soft-slate">
-                {loginCopy.legalEnd}
-              </Text>
             </View>
           </View>
         </View>
