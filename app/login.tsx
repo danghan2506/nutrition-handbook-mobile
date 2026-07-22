@@ -1,5 +1,5 @@
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   AccessibilityInfo,
@@ -12,11 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SocialLoginButton } from '@/components/auth/social-login-button';
 import { loginCopy } from '@/constants/auth';
+import { useAccessDestination } from '@/hooks/use-access-destination';
 import { signInWithProvider } from '@/lib/auth-oauth';
 import type { SocialAuthProvider } from '@/types/auth';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { destination, isLoading: isAccessLoading } = useAccessDestination();
   const [activeProvider, setActiveProvider] =
     useState<SocialAuthProvider | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,6 +63,14 @@ export default function LoginScreen() {
   };
 
   const isBusy = activeProvider !== null;
+
+  if (isAccessLoading || !destination) {
+    return null;
+  }
+
+  if (destination !== '/login') {
+    return <Redirect href={destination} />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF9F0' }}>

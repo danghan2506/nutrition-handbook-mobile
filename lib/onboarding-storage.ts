@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { resolveAccessDestination } from '@/lib/access-routing';
+
 const ONBOARDING_COMPLETED_KEY = 'aurale.onboardingCompleted';
 
 export async function readOnboardingCompleted(): Promise<boolean> {
@@ -13,9 +15,8 @@ export async function markOnboardingCompleted(): Promise<void> {
 export async function getInitialRoute(
   hasSession: boolean,
 ): Promise<'/onboarding' | '/login' | '/(tabs)'> {
-  if (!(await readOnboardingCompleted())) {
-    return '/onboarding';
-  }
-
-  return hasSession ? '/(tabs)' : '/login';
+  return resolveAccessDestination({
+    hasCompletedOnboarding: await readOnboardingCompleted(),
+    hasSession,
+  });
 }

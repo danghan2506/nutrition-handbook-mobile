@@ -4,19 +4,19 @@ import React from 'react';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { useAuthSession } from '@/hooks/use-auth-session';
+import { useAccessDestination } from '@/hooks/use-access-destination';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { isLoading, session } = useAuthSession();
+  const { destination, isLoading } = useAccessDestination();
 
-  if (isLoading) {
+  if (isLoading || !destination) {
     return null;
   }
 
-  if (!session) {
-    return <Redirect href="/login" />;
+  if (destination !== '/(tabs)') {
+    return <Redirect href={destination} />;
   }
 
   return (
