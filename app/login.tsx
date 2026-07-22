@@ -1,7 +1,13 @@
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SocialLoginButton } from '@/components/auth/social-login-button';
@@ -15,9 +21,14 @@ export default function LoginScreen() {
     useState<SocialAuthProvider | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    AccessibilityInfo.announceForAccessibility(message);
+  };
+
   const openLegalUrl = async (url: string | undefined) => {
     if (!url) {
-      setErrorMessage(loginCopy.genericError);
+      showError(loginCopy.genericError);
       return;
     }
 
@@ -39,7 +50,7 @@ export default function LoginScreen() {
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
-      setErrorMessage(
+      showError(
         /network|fetch|internet/i.test(message)
           ? loginCopy.offlineError
           : loginCopy.genericError,
@@ -104,7 +115,9 @@ export default function LoginScreen() {
             {errorMessage ? (
               <Text
                 accessibilityLiveRegion="polite"
-                className="text-center text-[14px] text-coral-notice">
+                accessibilityRole="alert"
+                className="text-center text-[14px] text-coral-notice"
+                selectable>
                 {errorMessage}
               </Text>
             ) : null}
@@ -132,6 +145,9 @@ export default function LoginScreen() {
                   {loginCopy.privacy}
                 </Text>
               </Pressable>
+              <Text className="text-[12px] text-soft-slate">
+                {loginCopy.legalEnd}
+              </Text>
             </View>
           </View>
         </View>

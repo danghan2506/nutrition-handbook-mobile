@@ -10,4 +10,5 @@ export const loginCopy = {
   legalPrefix: 'Bằng việc tiếp tục, bạn đồng ý với',
   terms: 'Điều khoản',
   privacy: 'Chính sách quyền riêng tư',
+  legalEnd: '.',
 } as const;
