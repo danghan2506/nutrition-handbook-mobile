@@ -80,7 +80,7 @@ export default function OnboardingScreen() {
     } catch (error: unknown) {
       console.warn('Không thể lưu trạng thái onboarding.', error);
     } finally {
-      router.replace('/(tabs)');
+      router.replace('/login');
     }
   };
 

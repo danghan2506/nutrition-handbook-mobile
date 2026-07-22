@@ -17,14 +17,20 @@ describe('onboarding storage', () => {
 
   it('defaults to incomplete when no value exists', async () => {
     await expect(readOnboardingCompleted()).resolves.toBe(false);
-    await expect(getInitialRoute()).resolves.toBe('/onboarding');
+    await expect(getInitialRoute(false)).resolves.toBe('/onboarding');
   });
 
-  it('stores completion and opens the main tabs', async () => {
+  it('opens login after onboarding when no session exists', async () => {
     await markOnboardingCompleted();
 
     await expect(readOnboardingCompleted()).resolves.toBe(true);
-    await expect(getInitialRoute()).resolves.toBe('/(tabs)');
+    await expect(getInitialRoute(false)).resolves.toBe('/login');
+  });
+
+  it('opens the main tabs after onboarding when a session exists', async () => {
+    await markOnboardingCompleted();
+
+    await expect(getInitialRoute(true)).resolves.toBe('/(tabs)');
   });
 
   it('treats every value except true as incomplete', async () => {
