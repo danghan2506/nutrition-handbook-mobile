@@ -3,7 +3,7 @@ import { resolveAccessDestination } from '../lib/access-routing';
 describe('access routing', () => {
   it.each([
     [false, false, '/onboarding'],
-    [false, true, '/onboarding'],
+    [false, true, '/(tabs)'],
     [true, false, '/login'],
     [true, true, '/(tabs)'],
   ] as const)(

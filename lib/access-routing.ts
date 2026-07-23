@@ -9,9 +9,13 @@ export function resolveAccessDestination({
   hasCompletedOnboarding,
   hasSession,
 }: AccessState): AccessDestination {
+  if (hasSession) {
+    return '/(tabs)';
+  }
+
   if (!hasCompletedOnboarding) {
     return '/onboarding';
   }
 
-  return hasSession ? '/(tabs)' : '/login';
+  return '/login';
 }
