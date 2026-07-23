@@ -1,27 +1,14 @@
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
+import { parseOAuthCallback } from '@/lib/oauth-callback';
 import { supabase } from '@/lib/supabase';
 import type {
-  OAuthTokens,
   SocialAuthProvider,
   SocialAuthResult,
 } from '@/types/auth';
 
 WebBrowser.maybeCompleteAuthSession();
-
-export function extractOAuthTokens(url: string): OAuthTokens | null {
-  const parsedUrl = new URL(url);
-  const params = new URLSearchParams(parsedUrl.hash.slice(1));
-  const accessToken = params.get('access_token');
-  const refreshToken = params.get('refresh_token');
-
-  if (!accessToken || !refreshToken) {
-    return null;
-  }
-
-  return { accessToken, refreshToken };
-}
 
 export async function signInWithProvider(
   provider: SocialAuthProvider,
@@ -53,16 +40,18 @@ export async function signInWithProvider(
     return { status: 'cancelled' };
   }
 
-  const tokens = extractOAuthTokens(result.url);
+  const callback = parseOAuthCallback(result.url);
 
-  if (!tokens) {
+  if (callback.status === 'cancelled') {
+    return callback;
+  }
+
+  if (callback.status === 'error') {
     throw new Error('OAuth callback is incomplete.');
   }
 
-  const { error: sessionError } = await supabase.auth.setSession({
-    access_token: tokens.accessToken,
-    refresh_token: tokens.refreshToken,
-  });
+  const { error: sessionError } =
+    await supabase.auth.exchangeCodeForSession(callback.code);
 
   if (sessionError) {
     throw sessionError;

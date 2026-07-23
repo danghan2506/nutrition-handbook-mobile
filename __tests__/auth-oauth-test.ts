@@ -1,30 +1,34 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { extractOAuthTokens } from '../lib/auth-oauth';
-
-jest.mock('../lib/supabase', () => ({
-  supabase: { auth: {} },
-}));
+import { parseOAuthCallback } from '../lib/oauth-callback';
 
 describe('social OAuth', () => {
-  it('extracts the Supabase session tokens from the callback fragment', () => {
+  it('extracts a one-time authorization code from a PKCE callback', () => {
     expect(
-      extractOAuthTokens(
-        'nutritionhandbook://auth/callback#access_token=access-123&refresh_token=refresh-456',
+      parseOAuthCallback(
+        'nutritionhandbook://auth/callback?code=authorization-code',
       ),
-    ).toEqual({ accessToken: 'access-123', refreshToken: 'refresh-456' });
+    ).toEqual({ status: 'success', code: 'authorization-code' });
   });
 
-  it('rejects callbacks that do not contain both tokens', () => {
+  it('treats provider access denial as cancellation', () => {
     expect(
-      extractOAuthTokens(
-        'nutritionhandbook://auth/callback#access_token=access-123',
+      parseOAuthCallback(
+        'nutritionhandbook://auth/callback?error=access_denied&error_description=cancelled',
       ),
-    ).toBeNull();
+    ).toEqual({ status: 'cancelled' });
   });
 
-  it('supports exactly Google and Facebook without logging tokens', () => {
+  it.each([
+    'nutritionhandbook://auth/callback',
+    'nutritionhandbook://auth/callback?error=server_error',
+    'nutritionhandbook://auth/callback#access_token=access&refresh_token=refresh',
+  ])('rejects an unsafe or incomplete callback: %s', (url) => {
+    expect(parseOAuthCallback(url)).toEqual({ status: 'error' });
+  });
+
+  it('supports exactly Google and Facebook without installing URL tokens', () => {
     const root = process.cwd();
     const nativeSource = readFileSync(join(root, 'lib', 'auth-oauth.ts'), 'utf8');
     const typesSource = readFileSync(join(root, 'types', 'auth.ts'), 'utf8');
@@ -32,7 +36,10 @@ describe('social OAuth', () => {
     expect(typesSource).toContain("'google' | 'facebook'");
     expect(nativeSource).toContain('skipBrowserRedirect: true');
     expect(nativeSource).toContain('openAuthSessionAsync');
-    expect(nativeSource).toContain('supabase.auth.setSession');
+    expect(nativeSource).toContain('exchangeCodeForSession');
+    expect(nativeSource).not.toContain('setSession');
+    expect(nativeSource).not.toContain('access_token');
+    expect(nativeSource).not.toContain('refresh_token');
     expect(nativeSource).not.toContain('console.log');
     expect(nativeSource).not.toContain('console.debug');
   });

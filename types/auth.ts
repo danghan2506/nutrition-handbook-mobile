@@ -5,7 +5,7 @@ export type SocialAuthResult =
   | { status: 'cancelled' }
   | { status: 'redirected' };
 
-export type OAuthTokens = {
-  accessToken: string;
-  refreshToken: string;
-};
+export type OAuthCallbackResult =
+  | { status: 'success'; code: string }
+  | { status: 'cancelled' }
+  | { status: 'error' };

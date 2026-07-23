@@ -31,6 +31,7 @@ describe('authentication configuration', () => {
     expect(nativeSource).toContain('ExpoSecureStoreAdapter');
     expect(nativeSource).toContain('persistSession: true');
     expect(nativeSource).toContain('detectSessionInUrl: false');
+    expect(nativeSource).toContain("flowType: 'pkce'");
     expect(webSource).toContain('persistSession: true');
     expect(webSource).toContain('detectSessionInUrl: true');
     expect(`${nativeSource}\n${webSource}`).not.toContain('service_role');
