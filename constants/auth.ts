@@ -12,3 +12,9 @@ export const loginCopy = {
   privacy: 'Chính sách quyền riêng tư',
   legalEnd: '.',
 } as const;
+
+export const logoutCopy = {
+  label: 'Đăng xuất',
+  loading: 'Đang đăng xuất…',
+  error: 'Chưa thể đăng xuất. Vui lòng thử lại.',
+} as const;

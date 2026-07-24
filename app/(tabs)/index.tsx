@@ -1,13 +1,40 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { logoutCopy } from '@/constants/auth';
+import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  const logout = async () => {
+    if (isSigningOut) {
+      return;
+    }
+
+    setIsSigningOut(true);
+    setSignOutError(null);
+
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+
+      if (error) {
+        throw error;
+      }
+    } catch {
+      setSignOutError(logoutCopy.error);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -21,6 +48,28 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+      <View className="gap-2">
+        <Pressable
+          accessibilityLabel={logoutCopy.label}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isSigningOut, busy: isSigningOut }}
+          className="min-h-12 items-center justify-center rounded-2xl border border-ink-navy px-4"
+          disabled={isSigningOut}
+          onPress={() => void logout()}
+          style={({ pressed }) => ({ opacity: pressed || isSigningOut ? 0.65 : 1 })}>
+          <Text className="font-sans text-[15px] font-bold text-ink-navy">
+            {isSigningOut ? logoutCopy.loading : logoutCopy.label}
+          </Text>
+        </Pressable>
+        {signOutError ? (
+          <Text
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            className="text-center text-[14px] text-coral-notice">
+            {signOutError}
+          </Text>
+        ) : null}
+      </View>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
