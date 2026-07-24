@@ -38,4 +38,17 @@ describe('onboarding storage', () => {
 
     await expect(readOnboardingCompleted()).resolves.toBe(false);
   });
+
+  it('does not read onboarding storage for an authenticated user', async () => {
+    const readSpy = jest
+      .spyOn(AsyncStorage, 'getItem')
+      .mockRejectedValueOnce(new Error('storage unavailable'));
+
+    readSpy.mockClear();
+
+    await expect(getInitialRoute(true)).resolves.toBe('/(tabs)');
+    expect(readSpy).not.toHaveBeenCalled();
+
+    readSpy.mockRestore();
+  });
 });

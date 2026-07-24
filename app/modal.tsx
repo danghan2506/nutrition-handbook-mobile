@@ -1,10 +1,22 @@
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
+import React from 'react';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useAccessDestination } from '@/hooks/use-access-destination';
 
 export default function ModalScreen() {
+  const { destination, isLoading } = useAccessDestination();
+
+  if (isLoading || !destination) {
+    return null;
+  }
+
+  if (destination !== '/(tabs)') {
+    return <Redirect href={destination} />;
+  }
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">This is a modal</ThemedText>

@@ -13,9 +13,15 @@ export function useAccessDestination() {
       return;
     }
 
+    if (session) {
+      setDestination('/(tabs)');
+      return;
+    }
+
+    setDestination(null);
     let isMounted = true;
 
-    void getInitialRoute(Boolean(session))
+    void getInitialRoute(false)
       .then((route) => {
         if (isMounted) {
           setDestination(route);

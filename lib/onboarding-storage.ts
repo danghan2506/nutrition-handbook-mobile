@@ -15,8 +15,12 @@ export async function markOnboardingCompleted(): Promise<void> {
 export async function getInitialRoute(
   hasSession: boolean,
 ): Promise<'/onboarding' | '/login' | '/(tabs)'> {
+  if (hasSession) {
+    return '/(tabs)';
+  }
+
   return resolveAccessDestination({
     hasCompletedOnboarding: await readOnboardingCompleted(),
-    hasSession,
+    hasSession: false,
   });
 }
