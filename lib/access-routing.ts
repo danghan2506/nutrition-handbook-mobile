@@ -5,6 +5,11 @@ type AccessState = {
   hasSession: boolean;
 };
 
+type VisibleAccessState = {
+  destination: AccessDestination | null;
+  hasSession: boolean;
+};
+
 export function resolveAccessDestination({
   hasCompletedOnboarding,
   hasSession,
@@ -18,4 +23,19 @@ export function resolveAccessDestination({
   }
 
   return '/login';
+}
+
+export function getVisibleAccessDestination({
+  destination,
+  hasSession,
+}: VisibleAccessState): AccessDestination | null {
+  if (hasSession) {
+    return '/(tabs)';
+  }
+
+  if (destination === '/(tabs)') {
+    return null;
+  }
+
+  return destination;
 }

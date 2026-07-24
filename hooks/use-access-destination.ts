@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 
 import { useAuthSession } from '@/hooks/use-auth-session';
-import type { AccessDestination } from '@/lib/access-routing';
+import {
+  getVisibleAccessDestination,
+  type AccessDestination,
+} from '@/lib/access-routing';
 import { getInitialRoute } from '@/lib/onboarding-storage';
 
 export function useAccessDestination() {
@@ -38,8 +41,13 @@ export function useAccessDestination() {
     };
   }, [isAuthLoading, session]);
 
-  return {
+  const visibleDestination = getVisibleAccessDestination({
     destination,
-    isLoading: isAuthLoading || destination === null,
+    hasSession: Boolean(session),
+  });
+
+  return {
+    destination: visibleDestination,
+    isLoading: isAuthLoading || visibleDestination === null,
   };
 }
