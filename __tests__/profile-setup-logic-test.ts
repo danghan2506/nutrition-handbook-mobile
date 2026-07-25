@@ -31,4 +31,38 @@ describe('profile setup logic', () => {
     expect(offsetToHeight(780)).toBe(165);
     expect(offsetToHeight(2000)).toBe(220);
   });
+
+  it('rejects a second action until the interaction lock is released', () => {
+    type TestInteractionLock = {
+      release: () => void;
+      tryAcquire: () => boolean;
+    };
+    type TestInteractionLockFactory = (
+      onChange: (isLocked: boolean) => void,
+    ) => TestInteractionLock;
+
+    const profileSetup = jest.requireActual('@/lib/profile-setup') as object;
+    const createInteractionLock = Reflect.get(
+      profileSetup,
+      'createInteractionLock',
+    ) as TestInteractionLockFactory | undefined;
+
+    expect(createInteractionLock).toBeDefined();
+    if (!createInteractionLock) {
+      return;
+    }
+
+    const stateChanges: boolean[] = [];
+    const lock = createInteractionLock((isLocked) => {
+      stateChanges.push(isLocked);
+    });
+
+    expect(lock.tryAcquire()).toBe(true);
+    expect(lock.tryAcquire()).toBe(false);
+    expect(stateChanges).toEqual([true]);
+
+    lock.release();
+    expect(stateChanges).toEqual([true, false]);
+    expect(lock.tryAcquire()).toBe(true);
+  });
 });

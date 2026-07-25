@@ -25,6 +25,9 @@ export function GenderSelect({ value, error, onChange }: GenderSelectProps) {
         accessibilityLabel={profileCopy.genderLabel}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: isOpen }}
+        accessibilityValue={{
+          text: selected?.label ?? profileCopy.genderPlaceholder,
+        }}
         className={`h-[57px] flex-row items-center rounded-[17px] border bg-surface px-3 ${
           error ? 'border-coral-notice' : 'border-quiet-dot'
         }`}

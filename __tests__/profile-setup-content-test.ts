@@ -35,6 +35,22 @@ describe('profile setup content', () => {
     expect(source).toContain("name: 'decrement'");
     expect(source).toContain('height % 5 === 0');
     expect(source).toContain('showsHorizontalScrollIndicator={false}');
+    expect(source).toContain('const didInitializeRef = useRef(false)');
+    expect(source).toContain('const initialValueRef = useRef(value)');
+    expect(source).toContain('const lastEmittedValueRef = useRef(value)');
+    expect(source).toMatch(
+      /if\s*\(!viewportWidth\s*\|\|\s*didInitializeRef\.current\)/,
+    );
+    expect(source).toContain(
+      'x: heightToOffset(initialValueRef.current)',
+    );
+    expect(source).toContain('}, [viewportWidth])');
+    expect(source).not.toContain('[value, viewportWidth]');
+    expect(source).toMatch(
+      /if\s*\(nextValue === lastEmittedValueRef\.current\)\s*\{\s*return;/,
+    );
+    expect(source).toContain('lastEmittedValueRef.current = nextValue');
+    expect(source).toContain('onChange(nextValue)');
     expect(source).not.toContain('Có thể điều chỉnh');
   });
 
@@ -54,5 +70,67 @@ describe('profile setup content', () => {
     expect(source).not.toContain('AsyncStorage');
     expect(source).not.toContain('supabase');
     expect(source).not.toContain('Có thể điều chỉnh');
+  });
+
+  it('locks every wizard action for the visible entry duration', () => {
+    const root = process.cwd();
+    const profile = readFileSync(join(root, 'app', 'profile-setup.tsx'), 'utf8');
+    const progress = readFileSync(
+      join(root, 'components', 'profile', 'profile-progress.tsx'),
+      'utf8',
+    );
+    const guardedActions = profile.match(/runGuardedAction\(\(\) =>/g) ?? [];
+
+    expect(profile).toContain(
+      'const [transitionPending, setTransitionPending] = useState(false)',
+    );
+    expect(profile).toContain(
+      'createInteractionLock(setTransitionPending)',
+    );
+    expect(guardedActions).toHaveLength(4);
+    expect(profile).toContain(
+      'const transitionDuration = reduceMotion ? 160 : 220',
+    );
+    expect(profile).toContain('}, transitionDuration)');
+    expect(profile).toContain('disabled={transitionPending}');
+    expect(profile).toContain('accessibilityState={{ disabled }}');
+    expect(profile).not.toContain('transitionPendingRef');
+    expect(progress).toContain('disabled: boolean');
+    expect(progress).toContain('disabled={disabled}');
+    expect(progress).toContain('accessibilityState={{ disabled }}');
+  });
+
+  it('announces validation and moves screen-reader focus to the ruler', () => {
+    const root = process.cwd();
+    const profile = readFileSync(join(root, 'app', 'profile-setup.tsx'), 'utf8');
+    const gender = readFileSync(
+      join(root, 'components', 'profile', 'gender-select.tsx'),
+      'utf8',
+    );
+    const ruler = readFileSync(
+      join(root, 'components', 'profile', 'height-ruler.tsx'),
+      'utf8',
+    );
+
+    expect(gender).toContain('accessibilityValue={{');
+    expect(gender).toContain(
+      'text: selected?.label ?? profileCopy.genderPlaceholder',
+    );
+    expect(profile).toContain(
+      'AccessibilityInfo.announceForAccessibility(message)',
+    );
+    expect(profile).toContain('announceValidationErrors(result.error)');
+    expect(profile).toContain(
+      'announceValidationErrors(nextErrors.age, nextErrors.gender)',
+    );
+    expect(profile).toContain('heightRulerRef.current?.focus()');
+    expect(profile).toContain('ref={heightRulerRef}');
+    expect(profile).toContain('accessibilityLiveRegion="polite"');
+    expect(gender).toContain('accessibilityLiveRegion="polite"');
+    expect(ruler).toContain('export type HeightRulerHandle');
+    expect(ruler).toContain('forwardRef<HeightRulerHandle');
+    expect(ruler).toContain('useImperativeHandle');
+    expect(ruler).toContain('findNodeHandle');
+    expect(ruler).toContain('AccessibilityInfo.setAccessibilityFocus');
   });
 });

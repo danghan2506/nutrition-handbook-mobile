@@ -40,3 +40,34 @@ export function offsetToHeight(offset: number): number {
     MIN_HEIGHT_CM + Math.round(offset / HEIGHT_TICK_SPACING),
   );
 }
+
+export type InteractionLock = {
+  release: () => void;
+  tryAcquire: () => boolean;
+};
+
+export function createInteractionLock(
+  onChange: (isLocked: boolean) => void,
+): InteractionLock {
+  let isLocked = false;
+
+  return {
+    release() {
+      if (!isLocked) {
+        return;
+      }
+
+      isLocked = false;
+      onChange(false);
+    },
+    tryAcquire() {
+      if (isLocked) {
+        return false;
+      }
+
+      isLocked = true;
+      onChange(true);
+      return true;
+    },
+  };
+}

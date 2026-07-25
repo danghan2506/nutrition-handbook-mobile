@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -20,16 +20,35 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GenderSelect } from '@/components/profile/gender-select';
-import { HeightRuler } from '@/components/profile/height-ruler';
+import {
+  HeightRuler,
+  type HeightRulerHandle,
+} from '@/components/profile/height-ruler';
 import { ProfileProgress } from '@/components/profile/profile-progress';
 import { PROFILE_DEFAULTS, profileCopy } from '@/constants/profile';
-import { validateAge, validateName } from '@/lib/profile-setup';
+import { useAuthSession } from '@/hooks/use-auth-session';
+import {
+  createInteractionLock,
+  validateAge,
+  validateName,
+} from '@/lib/profile-setup';
 import type { ProfileDraft, ProfileStep } from '@/types/profile';
 
 type Errors = Partial<Record<'name' | 'age' | 'gender', string>>;
 
+function announceValidationErrors(...messages: (string | undefined)[]) {
+  const message = messages
+    .filter((value): value is string => Boolean(value))
+    .join(' ');
+
+  if (message) {
+    AccessibilityInfo.announceForAccessibility(message);
+  }
+}
+
 export default function ProfileSetupScreen() {
   const router = useRouter();
+  const { isLoading, session } = useAuthSession();
   const reduceMotion = useReducedMotion();
   const { fontScale, width } = useWindowDimensions();
   const stackBasics = width < 360 || fontScale >= 1.5;
@@ -37,11 +56,25 @@ export default function ProfileSetupScreen() {
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [draft, setDraft] = useState<ProfileDraft>(PROFILE_DEFAULTS);
   const [errors, setErrors] = useState<Errors>({});
-  const transitionPendingRef = useRef(false);
+  const [transitionPending, setTransitionPending] = useState(false);
+  const interactionLockRef = useRef<ReturnType<
+    typeof createInteractionLock
+  > | null>(null);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<TextInput>(null);
   const ageInputRef = useRef<TextInput>(null);
+  const heightRulerRef = useRef<HeightRulerHandle>(null);
+
+  if (interactionLockRef.current === null) {
+    interactionLockRef.current = createInteractionLock(setTransitionPending);
+  }
+  const interactionLock = interactionLockRef.current;
 
   useEffect(() => {
+    if (isLoading || !session) {
+      return;
+    }
+
     AccessibilityInfo.announceForAccessibility(
       `Màn ${step + 1} trên 3`,
     );
@@ -51,74 +84,127 @@ export default function ProfileSetupScreen() {
     if (step === 1) {
       ageInputRef.current?.focus();
     }
-  }, [step]);
+    if (step === 2) {
+      heightRulerRef.current?.focus();
+    }
+  }, [isLoading, session, step]);
+
+  useEffect(
+    () => () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const transitionDuration = reduceMotion ? 160 : 220;
 
   const changeStep = (nextStep: ProfileStep, nextDirection: 'forward' | 'back') => {
-    if (transitionPendingRef.current) {
-      return;
-    }
-    transitionPendingRef.current = true;
     setDirection(nextDirection);
     setStep(nextStep);
-    setTimeout(() => {
-      transitionPendingRef.current = false;
-    }, reduceMotion ? 0 : 240);
+  };
+
+  const runGuardedAction = (action: () => boolean) => {
+    if (!interactionLock.tryAcquire()) {
+      return;
+    }
+
+    const transitionStarted = action();
+    if (!transitionStarted) {
+      interactionLock.release();
+      return;
+    }
+
+    transitionTimerRef.current = setTimeout(() => {
+      interactionLock.release();
+      transitionTimerRef.current = null;
+    }, transitionDuration);
+  };
+
+  const goBack = () => {
+    runGuardedAction(() => {
+      changeStep((step - 1) as ProfileStep, 'back');
+      return true;
+    });
   };
 
   const continueFromName = () => {
-    const result = validateName(draft.name);
-    if ('error' in result) {
-      setErrors({ name: result.error });
-      return;
-    }
-    setDraft((current) => ({ ...current, name: result.value }));
-    setErrors({});
-    changeStep(1, 'forward');
+    runGuardedAction(() => {
+      const result = validateName(draft.name);
+      if ('error' in result) {
+        setErrors({ name: result.error });
+        announceValidationErrors(result.error);
+        return false;
+      }
+      setDraft((current) => ({ ...current, name: result.value }));
+      setErrors({});
+      changeStep(1, 'forward');
+      return true;
+    });
   };
 
   const continueFromBasics = () => {
-    const ageResult = validateAge(draft.age);
-    const nextErrors: Errors = {};
-    if ('error' in ageResult) {
-      nextErrors.age = ageResult.error;
-    }
-    if (!draft.gender) {
-      nextErrors.gender = profileCopy.genderRequired;
-    }
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-    setErrors({});
-    changeStep(2, 'forward');
+    runGuardedAction(() => {
+      const ageResult = validateAge(draft.age);
+      const nextErrors: Errors = {};
+      if ('error' in ageResult) {
+        nextErrors.age = ageResult.error;
+      }
+      if (!draft.gender) {
+        nextErrors.gender = profileCopy.genderRequired;
+      }
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        announceValidationErrors(nextErrors.age, nextErrors.gender);
+        return false;
+      }
+      setErrors({});
+      changeStep(2, 'forward');
+      return true;
+    });
   };
 
   const finish = () => {
-    const nameResult = validateName(draft.name);
-    const ageResult = validateAge(draft.age);
-    if ('error' in nameResult) {
-      setErrors({ name: nameResult.error });
-      changeStep(0, 'back');
-      return;
-    }
-    if ('error' in ageResult || !draft.gender) {
-      setErrors({
-        age: 'error' in ageResult ? ageResult.error : undefined,
-        gender: draft.gender ? undefined : profileCopy.genderRequired,
-      });
-      changeStep(1, 'back');
-      return;
-    }
+    runGuardedAction(() => {
+      const nameResult = validateName(draft.name);
+      const ageResult = validateAge(draft.age);
+      if ('error' in nameResult) {
+        setErrors({ name: nameResult.error });
+        announceValidationErrors(nameResult.error);
+        changeStep(0, 'back');
+        return true;
+      }
+      if ('error' in ageResult || !draft.gender) {
+        const nextErrors: Errors = {
+          age: 'error' in ageResult ? ageResult.error : undefined,
+          gender: draft.gender ? undefined : profileCopy.genderRequired,
+        };
+        setErrors(nextErrors);
+        announceValidationErrors(nextErrors.age, nextErrors.gender);
+        changeStep(1, 'back');
+        return true;
+      }
 
-    // Persistence is intentionally deferred until a storage design is approved.
-    router.replace('/(tabs)');
+      // Persistence is intentionally deferred until a storage design is approved.
+      router.replace('/(tabs)');
+      return false;
+    });
   };
 
   const entering = reduceMotion
-    ? FadeIn.duration(160)
+    ? FadeIn.duration(transitionDuration)
     : direction === 'forward'
-      ? FadeInRight.duration(220)
-      : FadeInLeft.duration(220);
+      ? FadeInRight.duration(transitionDuration)
+      : FadeInLeft.duration(transitionDuration);
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!session) {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF9F0' }}>
@@ -130,7 +216,8 @@ export default function ProfileSetupScreen() {
           keyboardShouldPersistTaps="handled">
           <View className="w-full max-w-[520px] flex-1 self-center px-5 pb-6 pt-3">
             <ProfileProgress
-              onBack={() => changeStep((step - 1) as ProfileStep, 'back')}
+              disabled={transitionPending}
+              onBack={goBack}
               step={step}
             />
 
@@ -166,7 +253,11 @@ export default function ProfileSetupScreen() {
                       {errors.name}
                     </Text>
                   ) : null}
-                  <PrimaryAction label={profileCopy.continue} onPress={continueFromName} />
+                  <PrimaryAction
+                    disabled={transitionPending}
+                    label={profileCopy.continue}
+                    onPress={continueFromName}
+                  />
                 </>
               ) : null}
 
@@ -221,7 +312,11 @@ export default function ProfileSetupScreen() {
                       value={draft.gender}
                     />
                   </View>
-                  <PrimaryAction label={profileCopy.continue} onPress={continueFromBasics} />
+                  <PrimaryAction
+                    disabled={transitionPending}
+                    label={profileCopy.continue}
+                    onPress={continueFromBasics}
+                  />
                 </>
               ) : null}
 
@@ -243,12 +338,17 @@ export default function ProfileSetupScreen() {
                     <Text className="ml-2 text-[20px] font-bold text-soft-slate">cm</Text>
                   </View>
                   <HeightRuler
+                    ref={heightRulerRef}
                     onChange={(heightCm) =>
                       setDraft((current) => ({ ...current, heightCm }))
                     }
                     value={draft.heightCm}
                   />
-                  <PrimaryAction label={profileCopy.finish} onPress={finish} />
+                  <PrimaryAction
+                    disabled={transitionPending}
+                    label={profileCopy.finish}
+                    onPress={finish}
+                  />
                 </>
               ) : null}
             </Animated.View>
@@ -260,18 +360,21 @@ export default function ProfileSetupScreen() {
 }
 
 type PrimaryActionProps = {
+  disabled: boolean;
   label: string;
   onPress: () => void;
 };
 
-function PrimaryAction({ label, onPress }: PrimaryActionProps) {
+function PrimaryAction({ disabled, label, onPress }: PrimaryActionProps) {
   const reduceMotion = useReducedMotion();
 
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       className="mt-auto h-14 items-center justify-center rounded-[18px] bg-apricot"
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
         transform: [

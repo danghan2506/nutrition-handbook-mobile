@@ -5,11 +5,12 @@ import { PROFILE_STEP_COUNT, profileCopy } from '@/constants/profile';
 import type { ProfileStep } from '@/types/profile';
 
 type ProfileProgressProps = {
+  disabled: boolean;
   step: ProfileStep;
   onBack: () => void;
 };
 
-export function ProfileProgress({ step, onBack }: ProfileProgressProps) {
+export function ProfileProgress({ disabled, step, onBack }: ProfileProgressProps) {
   return (
     <>
       <View className="mb-6 flex-row items-center justify-between">
@@ -17,7 +18,9 @@ export function ProfileProgress({ step, onBack }: ProfileProgressProps) {
           <Pressable
             accessibilityLabel={profileCopy.back}
             accessibilityRole="button"
+            accessibilityState={{ disabled }}
             className="size-11 items-center justify-center rounded-[14px] border border-quiet-dot bg-surface"
+            disabled={disabled}
             onPress={onBack}>
             <Text className="text-[25px] leading-7 text-ink-navy">‹</Text>
           </Pressable>
