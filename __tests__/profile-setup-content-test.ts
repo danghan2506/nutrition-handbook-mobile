@@ -23,4 +23,18 @@ describe('profile setup content', () => {
     expect(progress).toContain('Màn ${step + 1} trên ${PROFILE_STEP_COUNT}');
     expect(`${constants}\n${gender}\n${progress}`).not.toContain('nickname');
   });
+  it('implements a whole-centimeter snapping adjustable ruler', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'components', 'profile', 'height-ruler.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('snapToInterval={HEIGHT_TICK_SPACING}');
+    expect(source).toContain('accessibilityRole="adjustable"');
+    expect(source).toContain("name: 'increment'");
+    expect(source).toContain("name: 'decrement'");
+    expect(source).toContain('height % 5 === 0');
+    expect(source).toContain('showsHorizontalScrollIndicator={false}');
+    expect(source).not.toContain('Có thể điều chỉnh');
+  });
 });
