@@ -37,4 +37,22 @@ describe('profile setup content', () => {
     expect(source).toContain('showsHorizontalScrollIndicator={false}');
     expect(source).not.toContain('Có thể điều chỉnh');
   });
+
+  it('composes exactly three local-state steps without nickname or persistence', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'app', 'profile-setup.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('useState<ProfileDraft>(PROFILE_DEFAULTS)');
+    expect(source).toContain('w-[92px]');
+    expect(source).toContain('<GenderSelect');
+    expect(source).toContain('<HeightRuler');
+    expect(source).toContain("router.replace('/(tabs)')");
+    expect(source).toContain('useReducedMotion');
+    expect(source).not.toContain('nickname');
+    expect(source).not.toContain('AsyncStorage');
+    expect(source).not.toContain('supabase');
+    expect(source).not.toContain('Có thể điều chỉnh');
+  });
 });
