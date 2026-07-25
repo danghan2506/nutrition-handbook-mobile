@@ -48,7 +48,7 @@ export default function LoginScreen() {
           : await signInWithProvider('facebook');
 
       if (result.status === 'success') {
-        router.replace('/(tabs)');
+        router.replace('/profile-setup');
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
@@ -68,7 +68,7 @@ export default function LoginScreen() {
     return null;
   }
 
-  if (destination !== '/login') {
+  if (!isBusy && destination !== '/login') {
     return <Redirect href={destination} />;
   }
 
