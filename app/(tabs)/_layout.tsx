@@ -1,13 +1,23 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { useAccessDestination } from '@/hooks/use-access-destination';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { destination, isLoading } = useAccessDestination();
+
+  if (isLoading || !destination) {
+    return null;
+  }
+
+  if (destination !== '/(tabs)') {
+    return <Redirect href={destination} />;
+  }
 
   return (
     <Tabs
