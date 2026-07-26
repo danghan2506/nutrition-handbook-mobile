@@ -13,7 +13,8 @@ describe('onboarding navigation', () => {
     expect(source).not.toContain('if (reduceMotion)');
     expect(source).toContain('OnboardingPagination');
     expect(source).toContain('markOnboardingCompleted');
-    expect(source).toContain("router.replace('/(tabs)')");
+    expect(source).toContain("router.replace('/login')");
+    expect(source).not.toContain("router.replace('/(tabs)')");
     expect(source).not.toContain('router.push');
     expect(source).not.toContain('/onboarding-habits');
     expect(source).toContain('accessibilityRole="button"');

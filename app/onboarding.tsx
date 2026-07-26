@@ -6,7 +6,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
@@ -21,6 +21,7 @@ import { MealTrackingSlide } from '@/components/onboarding/meal-tracking-slide';
 import { OnboardingPagination } from '@/components/onboarding/onboarding-pagination';
 import { VietnameseFoodAiSlide } from '@/components/onboarding/vietnamese-food-ai-slide';
 import { mealTrackingIntro, vietnameseFoodAiIntro } from '@/constants/onboarding';
+import { useAccessDestination } from '@/hooks/use-access-destination';
 import {
   getNextSlideIndex,
   getSlideIndexFromOffset,
@@ -38,6 +39,7 @@ type OnboardingSlide = (typeof slides)[number];
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { destination, isLoading: isAccessLoading } = useAccessDestination();
   const { width: pageWidth } = useWindowDimensions();
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
   const completionPendingRef = useRef(false);
@@ -80,7 +82,7 @@ export default function OnboardingScreen() {
     } catch (error: unknown) {
       console.warn('Không thể lưu trạng thái onboarding.', error);
     } finally {
-      router.replace('/(tabs)');
+      router.replace('/login');
     }
   };
 
@@ -100,6 +102,14 @@ export default function OnboardingScreen() {
     setActiveIndex(nextIndex);
 
   };
+
+  if (isAccessLoading || !destination) {
+    return null;
+  }
+
+  if (destination !== '/onboarding') {
+    return <Redirect href={destination} />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF9F0' }}>
