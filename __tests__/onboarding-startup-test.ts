@@ -12,9 +12,11 @@ describe('onboarding startup gate', () => {
     expect(layoutSource).toContain('SplashScreen.hideAsync');
     expect(source).not.toContain('SplashScreen.preventAutoHideAsync');
     expect(source).toContain('getInitialRoute');
+    expect(source).toContain('supabase?.auth.getSession()');
+    expect(source).toContain('Boolean(session)');
     expect(source).toContain('if (!destination)');
     expect(source).toContain('return null');
-    expect(source).toContain('<Redirect href={destination} />');
+    expect(source).toContain('<Redirect href={destination as Href} />');
     expect(source).not.toContain('SplashScreen.hideAsync');
   });
 });

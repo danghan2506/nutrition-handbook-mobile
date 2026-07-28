@@ -10,6 +10,14 @@ export async function markOnboardingCompleted(): Promise<void> {
   await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
 }
 
-export async function getInitialRoute(): Promise<'/onboarding' | '/(tabs)'> {
-  return (await readOnboardingCompleted()) ? '/(tabs)' : '/onboarding';
+export async function getInitialRoute(
+  hasSession: boolean,
+): Promise<'/onboarding' | '/(auth)/login' | '/(tabs)'> {
+  const hasCompletedOnboarding = await readOnboardingCompleted();
+
+  if (!hasCompletedOnboarding) {
+    return '/onboarding';
+  }
+
+  return hasSession ? '/(tabs)' : '/(auth)/login';
 }

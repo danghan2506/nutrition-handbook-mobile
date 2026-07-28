@@ -6,7 +6,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
@@ -80,7 +80,7 @@ export default function OnboardingScreen() {
     } catch (error: unknown) {
       console.warn('Không thể lưu trạng thái onboarding.', error);
     } finally {
-      router.replace('/(tabs)');
+      router.replace('/(auth)/login' as Href);
     }
   };
 

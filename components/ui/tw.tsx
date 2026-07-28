@@ -1,5 +1,5 @@
 import { useCssElement } from "react-native-css";
-import type React from "react";
+import React from "react";
 import {
   Pressable as RNPressable,
   ScrollView as RNScrollView,
@@ -24,11 +24,12 @@ export function Pressable(
   return useCssElement(RNPressable, props, { className: "style" });
 }
 
-export function TextInput(
-  props: WithClassName<React.ComponentProps<typeof RNTextInput>>,
-) {
-  return useCssElement(RNTextInput, props, { className: "style" });
-}
+export const TextInput = React.forwardRef<
+  RNTextInput,
+  WithClassName<React.ComponentProps<typeof RNTextInput>>
+>(function TextInput(props, ref) {
+  return useCssElement(RNTextInput, { ...props, ref }, { className: "style" });
+});
 
 export function ScrollView(
   props: WithClassName<
