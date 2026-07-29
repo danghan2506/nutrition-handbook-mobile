@@ -49,4 +49,3 @@ export const profileCopy = {
   weightRange: 'Cân nặng cần nằm trong khoảng 20–300 kg.',
   genderRequired: 'Vui lòng chọn giới tính.',
 } as const;
-

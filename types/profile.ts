@@ -9,4 +9,3 @@ export type ProfileDraft = {
   gender: Gender | null;
   heightCm: number;
 };
-

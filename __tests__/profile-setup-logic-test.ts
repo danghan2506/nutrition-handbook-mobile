@@ -86,4 +86,3 @@ describe('profile setup logic', () => {
     expect(lock.tryAcquire()).toBe(true);
   });
 });
-
