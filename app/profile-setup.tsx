@@ -19,13 +19,21 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  ActivityLevelSelect,
+  type ActivityLevelSelectHandle,
+} from '@/components/profile/activity-level-select';
 import { GenderSelect } from '@/components/profile/gender-select';
 import {
   HeightRuler,
   type HeightRulerHandle,
 } from '@/components/profile/height-ruler';
 import { ProfileProgress } from '@/components/profile/profile-progress';
-import { PROFILE_DEFAULTS, profileCopy } from '@/constants/profile';
+import {
+  PROFILE_DEFAULTS,
+  PROFILE_STEP_COUNT,
+  profileCopy,
+} from '@/constants/profile';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import {
   createInteractionLock,
@@ -35,7 +43,9 @@ import {
 } from '@/lib/profile-setup';
 import type { ProfileDraft, ProfileStep } from '@/types/profile';
 
-type Errors = Partial<Record<'name' | 'age' | 'weight' | 'gender', string>>;
+type Errors = Partial<
+  Record<'name' | 'age' | 'weight' | 'gender' | 'activity', string>
+>;
 
 function announceValidationErrors(...messages: (string | undefined)[]) {
   const message = messages
@@ -66,6 +76,7 @@ export default function ProfileSetupScreen() {
   const ageInputRef = useRef<TextInput>(null);
   const weightInputRef = useRef<TextInput>(null);
   const heightRulerRef = useRef<HeightRulerHandle>(null);
+  const activityLevelSelectRef = useRef<ActivityLevelSelectHandle>(null);
 
   if (interactionLockRef.current === null) {
     interactionLockRef.current = createInteractionLock(setTransitionPending);
@@ -78,7 +89,7 @@ export default function ProfileSetupScreen() {
     }
 
     AccessibilityInfo.announceForAccessibility(
-      `Màn ${step + 1} trên 3`,
+      `Màn ${step + 1} trên ${PROFILE_STEP_COUNT}`,
     );
     if (step === 0) {
       nameInputRef.current?.focus();
@@ -88,6 +99,9 @@ export default function ProfileSetupScreen() {
     }
     if (step === 2) {
       heightRulerRef.current?.focus();
+    }
+    if (step === 3) {
+      activityLevelSelectRef.current?.focus();
     }
   }, [isLoading, session, step]);
 
@@ -175,6 +189,13 @@ export default function ProfileSetupScreen() {
     });
   };
 
+  const continueFromHeight = () => {
+    runGuardedAction(() => {
+      changeStep(3, 'forward');
+      return true;
+    });
+  };
+
   const finish = () => {
     runGuardedAction(() => {
       const nameResult = validateName(draft.name);
@@ -203,6 +224,12 @@ export default function ProfileSetupScreen() {
           nextErrors.gender,
         );
         changeStep(1, 'back');
+        return true;
+      }
+      if (!draft.activityLevel) {
+        setErrors({ activity: profileCopy.activityRequired });
+        announceValidationErrors(profileCopy.activityRequired);
+        changeStep(3, 'back');
         return true;
       }
 
@@ -234,7 +261,7 @@ export default function ProfileSetupScreen() {
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled">
-          <View className="w-full max-w-[520px] flex-1 self-center px-5 pb-6 pt-3">
+          <View className="w-full max-w-[520px] flex-1 self-center px-5 pb-12 pt-3">
             <ProfileProgress
               disabled={transitionPending}
               onBack={goBack}
@@ -400,6 +427,43 @@ export default function ProfileSetupScreen() {
                   />
                   <PrimaryAction
                     disabled={transitionPending}
+                    label={profileCopy.continue}
+                    onPress={continueFromHeight}
+                  />
+                </>
+              ) : null}
+
+              {step === 3 ? (
+                <>
+                  <Text className="text-[12px] font-extrabold tracking-[1px] text-label-slate">
+                    {profileCopy.activityKicker}
+                  </Text>
+                  <Text className="mt-2 font-rounded text-[31px] font-extrabold leading-[37px] text-ink-navy">
+                    {profileCopy.activityTitle}
+                  </Text>
+                  <Text className="mt-3 text-[15px] leading-6 text-soft-slate">
+                    {profileCopy.activityBody}
+                  </Text>
+                  <View className="mt-6">
+                    <ActivityLevelSelect
+                      ref={activityLevelSelectRef}
+                      disabled={transitionPending}
+                      error={errors.activity}
+                      onChange={(activityLevel) => {
+                        setDraft((current) => ({ ...current, activityLevel }));
+                        setErrors((current) => ({
+                          ...current,
+                          activity: undefined,
+                        }));
+                      }}
+                      value={draft.activityLevel}
+                    />
+                  </View>
+                  <Text className="mt-1 text-[13px] leading-5 text-soft-slate">
+                    {profileCopy.activityNote}
+                  </Text>
+                  <PrimaryAction
+                    disabled={transitionPending || !draft.activityLevel}
                     label={profileCopy.finish}
                     onPress={finish}
                   />
@@ -427,7 +491,9 @@ function PrimaryAction({ disabled, label, onPress }: PrimaryActionProps) {
       accessibilityLabel={label}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      className="mt-auto h-14 items-center justify-center rounded-[18px] bg-apricot"
+      className={`mt-auto h-14 items-center justify-center rounded-[18px] ${
+        disabled ? 'bg-peach' : 'bg-apricot'
+      }`}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -436,7 +502,12 @@ function PrimaryAction({ disabled, label, onPress }: PrimaryActionProps) {
           { translateY: pressed && !reduceMotion ? 1 : 0 },
         ],
       })}>
-      <Text className="text-[16px] font-extrabold text-surface">{label}</Text>
+      <Text
+        className={`text-[16px] font-extrabold ${
+          disabled ? 'text-soft-slate' : 'text-surface'
+        }`}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

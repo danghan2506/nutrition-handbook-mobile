@@ -86,7 +86,7 @@ describe('profile setup content', () => {
     expect(source).not.toContain('Có thể điều chỉnh');
   });
 
-  it('composes exactly three local-state steps without nickname or persistence', () => {
+  it('composes exactly four local-state steps without nickname or persistence', () => {
     const source = readFileSync(
       join(process.cwd(), 'app', 'profile-setup.tsx'),
       'utf8',
@@ -102,6 +102,17 @@ describe('profile setup content', () => {
     expect(source).toContain('<GenderSelect');
     expect(source).toContain('<HeightRuler');
     expect(source).toContain("router.replace('/(tabs)')");
+    expect(source).toContain('PROFILE_STEP_COUNT');
+    expect(source).not.toContain('trên 3');
+    expect(source).toContain('step === 3');
+    expect(source).toContain('<ActivityLevelSelect');
+    expect(source).toContain('value={draft.activityLevel}');
+    expect(source).toContain("changeStep(3, 'forward')");
+    expect(source).toContain('profileCopy.activityNote');
+    expect(source).toContain('profileCopy.activityRequired');
+    expect(source).toContain(
+      'disabled={transitionPending || !draft.activityLevel}',
+    );
     expect(source).toContain('useReducedMotion');
     expect(source).not.toContain('nickname');
     expect(source).not.toContain('AsyncStorage');
@@ -124,7 +135,7 @@ describe('profile setup content', () => {
     expect(profile).toContain(
       'createInteractionLock(setTransitionPending)',
     );
-    expect(guardedActions).toHaveLength(4);
+    expect(guardedActions).toHaveLength(5);
     expect(profile).toContain(
       'const transitionDuration = reduceMotion ? 160 : 220',
     );
@@ -160,6 +171,12 @@ describe('profile setup content', () => {
     expect(profile).toContain('nextErrors.weight,');
     expect(profile).toContain('heightRulerRef.current?.focus()');
     expect(profile).toContain('ref={heightRulerRef}');
+    expect(profile).toContain('activityLevelSelectRef.current?.focus()');
+    expect(profile).toContain('ref={activityLevelSelectRef}');
+    expect(profile).toContain(
+      'setDraft((current) => ({ ...current, activityLevel }))',
+    );
+    expect(profile).toContain('errors.activity');
     expect(profile).toContain('accessibilityLiveRegion="polite"');
     expect(gender).toContain('accessibilityLiveRegion="polite"');
     expect(ruler).toContain('export type HeightRulerHandle');
