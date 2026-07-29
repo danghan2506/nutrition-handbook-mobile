@@ -55,7 +55,7 @@ export default function VerifyOtpScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    router.replace('/profile-setup');
   };
 
   const handleResend = async () => {

@@ -53,7 +53,7 @@ export default function LoginScreen() {
     setPendingAction(null);
 
     if (result.status === 'success') {
-      router.replace('/(tabs)');
+      router.replace('/profile-setup');
       return;
     }
 

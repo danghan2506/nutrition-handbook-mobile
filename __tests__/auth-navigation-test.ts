@@ -29,6 +29,6 @@ describe('authentication route gates', () => {
       'utf8',
     );
 
-    expect(source).toContain("router.replace('/(tabs)')");
+    expect(source).toContain("router.replace('/profile-setup')");
   });
 });
