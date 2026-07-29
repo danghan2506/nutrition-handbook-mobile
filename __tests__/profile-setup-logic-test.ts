@@ -6,8 +6,27 @@ import {
   validateName,
   validateWeight,
 } from '@/lib/profile-setup';
+import {
+  ACTIVITY_LEVEL_OPTIONS,
+  PROFILE_DEFAULTS,
+  PROFILE_STEP_COUNT,
+} from '@/constants/profile';
 
 describe('profile setup logic', () => {
+  it('defines four activity choices with an initially empty activity level', () => {
+    expect(PROFILE_STEP_COUNT).toBe(4);
+    expect(PROFILE_DEFAULTS.activityLevel).toBeNull();
+    expect(ACTIVITY_LEVEL_OPTIONS.map((option) => option.value)).toEqual([
+      'sedentary',
+      'light',
+      'active',
+      'very_active',
+    ]);
+    expect(
+      ACTIVITY_LEVEL_OPTIONS.every((option) => option.details.length >= 3),
+    ).toBe(true);
+  });
+
   it('trims names and rejects an empty result', () => {
     expect(validateName('  Linh  ')).toEqual({ value: 'Linh' });
     expect(validateName('   ')).toEqual({ error: 'Vui lòng nhập tên của bạn.' });

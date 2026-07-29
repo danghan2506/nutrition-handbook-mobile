@@ -1,7 +1,39 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('profile setup content', () => {
+  it('implements accessible, focusable activity radio cards with selected details', () => {
+    const sourcePath = join(
+      process.cwd(),
+      'components',
+      'profile',
+      'activity-level-select.tsx',
+    );
+
+    expect(existsSync(sourcePath)).toBe(true);
+    if (!existsSync(sourcePath)) {
+      return;
+    }
+
+    const source = readFileSync(sourcePath, 'utf8');
+
+    expect(source).toContain('accessibilityRole="radio"');
+    expect(source).toContain(
+      'accessibilityState={{ checked: isSelected, disabled }}',
+    );
+    expect(source).toContain('airline_seat_recline_normal.svg');
+    expect(source).toContain('directions_walk.svg');
+    expect(source).toContain('sports_gymnastics.svg');
+    expect(source).toContain('directions_run.svg');
+    expect(source).toContain('isSelected ? (');
+    expect(source).toContain('option.details.map');
+    expect(source).toContain('export type ActivityLevelSelectHandle');
+    expect(source).toMatch(/forwardRef<\s*ActivityLevelSelectHandle/);
+    expect(source).toContain('useImperativeHandle');
+    expect(source).toContain('findNodeHandle');
+    expect(source).toContain('AccessibilityInfo.setAccessibilityFocus');
+  });
+
   it('defines the approved gender combo box and progress accessibility', () => {
     const root = process.cwd();
     const constants = readFileSync(join(root, 'constants', 'profile.ts'), 'utf8');
