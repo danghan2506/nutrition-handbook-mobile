@@ -16,15 +16,20 @@ describe('profile setup content', () => {
     }
 
     const source = readFileSync(sourcePath, 'utf8');
+    const imageSource = readFileSync(
+      join(process.cwd(), 'constants', 'images.ts'),
+      'utf8',
+    );
 
     expect(source).toContain('accessibilityRole="radio"');
-    expect(source).toContain(
-      'accessibilityState={{ checked: isSelected, disabled }}',
-    );
-    expect(source).toContain('airline_seat_recline_normal.svg');
-    expect(source).toContain('directions_walk.svg');
-    expect(source).toContain('sports_gymnastics.svg');
-    expect(source).toContain('directions_run.svg');
+    expect(source).toContain('checked: isSelected');
+    expect(source).toContain('disabled,');
+    expect(imageSource).toContain('airline_seat_recline_normal.svg');
+    expect(imageSource).toContain('directions_walk.svg');
+    expect(imageSource).toContain('sports_gymnastics.svg');
+    expect(imageSource).toContain('directions_run.svg');
+    expect(source).toContain('@/constants/images');
+    expect(source).not.toContain('../../assets/icons');
     expect(source).toContain('isSelected ? (');
     expect(source).toContain('option.details.map');
     expect(source).toContain('export type ActivityLevelSelectHandle');
@@ -35,6 +40,9 @@ describe('profile setup content', () => {
     expect(source).toContain('optionRefs.current[value]');
     expect(source).toContain('optionRefs.current.sedentary');
     expect(source).toContain('[value]');
+    expect(source).toContain('expanded: isSelected');
+    expect(source).toContain('accessibilityLabel={option.details.join');
+    expect(source).toContain('text-[15px] font-extrabold text-ink-navy');
   });
 
   it('defines the approved gender combo box and progress accessibility', () => {

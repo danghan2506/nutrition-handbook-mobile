@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import { images } from '@/constants/images';
 import { ACTIVITY_LEVEL_OPTIONS } from '@/constants/profile';
 import type { ActivityLevel } from '@/types/profile';
 
@@ -23,10 +24,10 @@ export type ActivityLevelSelectHandle = {
 };
 
 const activityIcons = {
-  sedentary: require('../../assets/icons/airline_seat_recline_normal.svg'),
-  light: require('../../assets/icons/directions_walk.svg'),
-  active: require('../../assets/icons/sports_gymnastics.svg'),
-  very_active: require('../../assets/icons/directions_run.svg'),
+  sedentary: images.activitySedentary,
+  light: images.activityLight,
+  active: images.activityActive,
+  very_active: images.activityVeryActive,
 } satisfies Record<ActivityLevel, number>;
 
 export const ActivityLevelSelect = forwardRef<
@@ -57,49 +58,59 @@ export const ActivityLevelSelect = forwardRef<
         const isSelected = value === option.value;
 
         return (
-          <Pressable
+          <View
             key={option.value}
-            ref={(node) => {
-              optionRefs.current[option.value] = node;
-            }}
-            accessibilityLabel={option.label}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: isSelected, disabled }}
-            className={`mb-3 min-h-14 rounded-[20px] border p-4 ${
+            className={
               isSelected
-                ? 'border-apricot bg-peach'
-                : 'border-quiet-dot bg-surface'
-            }`}
-            disabled={disabled}
-            onPress={() => onChange(option.value)}>
-            <View className="flex-row items-center">
-              <Image
-                accessible={false}
-                contentFit="contain"
-                source={activityIcons[option.value]}
-                style={{ height: 28, width: 28 }}
-                tintColor={isSelected ? '#FF9E7A' : '#2F3542'}
-              />
-              <Text className="ml-3 flex-1 text-[16px] font-extrabold text-ink-navy">
-                {option.label}
-              </Text>
-              <View
-                accessibilityElementsHidden
-                className={`h-6 w-6 items-center justify-center rounded-full border-2 ${
-                  isSelected
-                    ? 'border-apricot bg-apricot'
-                    : 'border-quiet-dot'
-                }`}>
-                {isSelected ? (
-                  <Text className="text-[15px] font-extrabold text-surface">
-                    ✓
-                  </Text>
-                ) : null}
+                ? 'mb-3 rounded-[20px] border border-apricot bg-peach'
+                : 'mb-3 rounded-[20px] border border-quiet-dot bg-surface'
+            }>
+            <Pressable
+              ref={(node) => {
+                optionRefs.current[option.value] = node;
+              }}
+              accessibilityLabel={option.label}
+              accessibilityRole="radio"
+              accessibilityState={{
+                checked: isSelected,
+                disabled,
+                expanded: isSelected,
+              }}
+              className="min-h-14 p-4"
+              disabled={disabled}
+              onPress={() => onChange(option.value)}>
+              <View className="flex-row items-center">
+                <Image
+                  accessible={false}
+                  contentFit="contain"
+                  source={activityIcons[option.value]}
+                  style={{ height: 28, width: 28 }}
+                  tintColor={isSelected ? '#FF9E7A' : '#2F3542'}
+                />
+                <Text className="ml-3 flex-1 text-[16px] font-extrabold text-ink-navy">
+                  {option.label}
+                </Text>
+                <View
+                  accessibilityElementsHidden
+                  className={`h-6 w-6 items-center justify-center rounded-full border-2 ${
+                    isSelected
+                      ? 'border-apricot bg-apricot'
+                      : 'border-quiet-dot'
+                  }`}>
+                  {isSelected ? (
+                    <Text className="text-[15px] font-extrabold text-ink-navy">
+                      ✓
+                    </Text>
+                  ) : null}
+                </View>
               </View>
-            </View>
+            </Pressable>
 
             {isSelected ? (
-              <View className="mt-4 border-t border-apricot/40 pt-3">
+              <View
+                accessible
+                accessibilityLabel={option.details.join('. ')}
+                className="mx-4 mb-2 border-t border-apricot/40 pt-3">
                 {option.details.map((detail) => (
                   <View key={detail} className="mb-2 flex-row">
                     <Text className="mr-2 text-[14px] leading-5 text-ink-navy">
@@ -112,7 +123,7 @@ export const ActivityLevelSelect = forwardRef<
                 ))}
               </View>
             ) : null}
-          </Pressable>
+          </View>
         );
       })}
 
