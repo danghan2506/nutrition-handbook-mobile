@@ -4,6 +4,7 @@ import {
   offsetToHeight,
   validateAge,
   validateName,
+  validateWeight,
 } from '@/lib/profile-setup';
 
 describe('profile setup logic', () => {
@@ -21,6 +22,25 @@ describe('profile setup logic', () => {
     expect(validateAge('abc')).toEqual({ error: 'Vui lòng nhập tuổi bằng số nguyên.' });
   });
 
+  it('accepts whole-number weights from 20 through 300', () => {
+    expect(validateWeight('20')).toEqual({ value: 20 });
+    expect(validateWeight('300')).toEqual({ value: 300 });
+    expect(validateWeight('19')).toEqual({
+      error: 'Cân nặng cần nằm trong khoảng 20–300 kg.',
+    });
+    expect(validateWeight('301')).toEqual({
+      error: 'Cân nặng cần nằm trong khoảng 20–300 kg.',
+    });
+    expect(validateWeight('')).toEqual({
+      error: 'Vui lòng nhập cân nặng bằng số nguyên.',
+    });
+    expect(validateWeight('65.5')).toEqual({
+      error: 'Vui lòng nhập cân nặng bằng số nguyên.',
+    });
+    expect(validateWeight('abc')).toEqual({
+      error: 'Vui lòng nhập cân nặng bằng số nguyên.',
+    });
+  });
   it('clamps and converts ruler values at a 12 px tick interval', () => {
     expect(clampHeight(99)).toBe(100);
     expect(clampHeight(165)).toBe(165);

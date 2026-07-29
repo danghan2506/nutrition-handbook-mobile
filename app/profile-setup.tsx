@@ -31,10 +31,11 @@ import {
   createInteractionLock,
   validateAge,
   validateName,
+  validateWeight,
 } from '@/lib/profile-setup';
 import type { ProfileDraft, ProfileStep } from '@/types/profile';
 
-type Errors = Partial<Record<'name' | 'age' | 'gender', string>>;
+type Errors = Partial<Record<'name' | 'age' | 'weight' | 'gender', string>>;
 
 function announceValidationErrors(...messages: (string | undefined)[]) {
   const message = messages
@@ -63,6 +64,7 @@ export default function ProfileSetupScreen() {
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<TextInput>(null);
   const ageInputRef = useRef<TextInput>(null);
+  const weightInputRef = useRef<TextInput>(null);
   const heightRulerRef = useRef<HeightRulerHandle>(null);
 
   if (interactionLockRef.current === null) {
@@ -147,16 +149,24 @@ export default function ProfileSetupScreen() {
   const continueFromBasics = () => {
     runGuardedAction(() => {
       const ageResult = validateAge(draft.age);
+      const weightResult = validateWeight(draft.weightKg);
       const nextErrors: Errors = {};
       if ('error' in ageResult) {
         nextErrors.age = ageResult.error;
+      }
+      if ('error' in weightResult) {
+        nextErrors.weight = weightResult.error;
       }
       if (!draft.gender) {
         nextErrors.gender = profileCopy.genderRequired;
       }
       if (Object.keys(nextErrors).length > 0) {
         setErrors(nextErrors);
-        announceValidationErrors(nextErrors.age, nextErrors.gender);
+        announceValidationErrors(
+          nextErrors.age,
+          nextErrors.weight,
+          nextErrors.gender,
+        );
         return false;
       }
       setErrors({});
@@ -169,19 +179,29 @@ export default function ProfileSetupScreen() {
     runGuardedAction(() => {
       const nameResult = validateName(draft.name);
       const ageResult = validateAge(draft.age);
+      const weightResult = validateWeight(draft.weightKg);
       if ('error' in nameResult) {
         setErrors({ name: nameResult.error });
         announceValidationErrors(nameResult.error);
         changeStep(0, 'back');
         return true;
       }
-      if ('error' in ageResult || !draft.gender) {
+      if (
+        'error' in ageResult ||
+        'error' in weightResult ||
+        !draft.gender
+      ) {
         const nextErrors: Errors = {
           age: 'error' in ageResult ? ageResult.error : undefined,
+          weight: 'error' in weightResult ? weightResult.error : undefined,
           gender: draft.gender ? undefined : profileCopy.genderRequired,
         };
         setErrors(nextErrors);
-        announceValidationErrors(nextErrors.age, nextErrors.gender);
+        announceValidationErrors(
+          nextErrors.age,
+          nextErrors.weight,
+          nextErrors.gender,
+        );
         changeStep(1, 'back');
         return true;
       }
@@ -300,6 +320,40 @@ export default function ProfileSetupScreen() {
                       {errors.age ? (
                         <Text accessibilityLiveRegion="polite" className="mt-2 text-[12px] text-coral-notice">
                           {errors.age}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <View className={stackBasics ? 'w-full' : 'w-[104px]'}>
+                      <Text className="mb-2 text-[14px] font-bold text-ink-navy">
+                        {profileCopy.weightLabel}
+                      </Text>
+                      <View className={`h-[57px] flex-row items-center rounded-[17px] border bg-surface px-3 ${
+                        errors.weight ? 'border-coral-notice' : 'border-quiet-dot'
+                      }`}>
+                        <TextInput
+                          ref={weightInputRef}
+                          accessibilityLabel={profileCopy.weightLabel}
+                          className="min-w-0 flex-1 p-0 text-[17px] font-bold text-ink-navy"
+                          keyboardType="number-pad"
+                          maxLength={3}
+                          onChangeText={(weightKg) => {
+                            setDraft((current) => ({ ...current, weightKg }));
+                            setErrors((current) => ({
+                              ...current,
+                              weight: undefined,
+                            }));
+                          }}
+                          value={draft.weightKg}
+                        />
+                        <Text className="ml-1 text-[12px] font-bold text-soft-slate">
+                          kg
+                        </Text>
+                      </View>
+                      {errors.weight ? (
+                        <Text
+                          accessibilityLiveRegion="polite"
+                          className="mt-2 text-[12px] text-coral-notice">
+                          {errors.weight}
                         </Text>
                       ) : null}
                     </View>

@@ -62,6 +62,11 @@ describe('profile setup content', () => {
 
     expect(source).toContain('useState<ProfileDraft>(PROFILE_DEFAULTS)');
     expect(source).toContain('w-[92px]');
+    expect(source).toContain('validateWeight(draft.weightKg)');
+    expect(source).toContain('accessibilityLabel={profileCopy.weightLabel}');
+    expect(source).toContain('value={draft.weightKg}');
+    expect(source).toContain('nextErrors.weight');
+    expect(source).toMatch(/>\s*kg\s*<\/Text>/);
     expect(source).toContain('<GenderSelect');
     expect(source).toContain('<HeightRuler');
     expect(source).toContain("router.replace('/(tabs)')");
@@ -120,9 +125,7 @@ describe('profile setup content', () => {
       'AccessibilityInfo.announceForAccessibility(message)',
     );
     expect(profile).toContain('announceValidationErrors(result.error)');
-    expect(profile).toContain(
-      'announceValidationErrors(nextErrors.age, nextErrors.gender)',
-    );
+    expect(profile).toContain('nextErrors.weight,');
     expect(profile).toContain('heightRulerRef.current?.focus()');
     expect(profile).toContain('ref={heightRulerRef}');
     expect(profile).toContain('accessibilityLiveRegion="polite"');

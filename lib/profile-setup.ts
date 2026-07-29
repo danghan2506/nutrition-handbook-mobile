@@ -2,8 +2,10 @@ import {
   HEIGHT_TICK_SPACING,
   MAX_AGE,
   MAX_HEIGHT_CM,
+  MAX_WEIGHT_KG,
   MIN_AGE,
   MIN_HEIGHT_CM,
+  MIN_WEIGHT_KG,
   profileCopy,
 } from '@/constants/profile';
 
@@ -27,6 +29,18 @@ export function validateAge(input: string): ValidationResult<number> {
   return { value };
 }
 
+export function validateWeight(input: string): ValidationResult<number> {
+  if (!/^\d+$/.test(input)) {
+    return { error: profileCopy.weightInteger };
+  }
+
+  const value = Number(input);
+  if (value < MIN_WEIGHT_KG || value > MAX_WEIGHT_KG) {
+    return { error: profileCopy.weightRange };
+  }
+
+  return { value };
+}
 export function clampHeight(value: number): number {
   return Math.min(MAX_HEIGHT_CM, Math.max(MIN_HEIGHT_CM, value));
 }
