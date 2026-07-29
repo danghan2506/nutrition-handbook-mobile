@@ -33,30 +33,35 @@ export const ActivityLevelSelect = forwardRef<
   ActivityLevelSelectHandle,
   ActivityLevelSelectProps
 >(function ActivityLevelSelect({ value, disabled, error, onChange }, ref) {
-  const firstOptionRef = useRef<View>(null);
+  const optionRefs = useRef<Partial<Record<ActivityLevel, View | null>>>({});
 
   useImperativeHandle(
     ref,
     () => ({
       focus() {
-        const reactTag = findNodeHandle(firstOptionRef.current);
+        const target = value
+          ? optionRefs.current[value]
+          : optionRefs.current.sedentary;
+        const reactTag = findNodeHandle(target ?? null);
         if (reactTag !== null) {
           AccessibilityInfo.setAccessibilityFocus(reactTag);
         }
       },
     }),
-    [],
+    [value],
   );
 
   return (
     <View>
-      {ACTIVITY_LEVEL_OPTIONS.map((option, index) => {
+      {ACTIVITY_LEVEL_OPTIONS.map((option) => {
         const isSelected = value === option.value;
 
         return (
           <Pressable
             key={option.value}
-            ref={index === 0 ? firstOptionRef : undefined}
+            ref={(node) => {
+              optionRefs.current[option.value] = node;
+            }}
             accessibilityLabel={option.label}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected, disabled }}

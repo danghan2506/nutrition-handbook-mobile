@@ -32,6 +32,9 @@ describe('profile setup content', () => {
     expect(source).toContain('useImperativeHandle');
     expect(source).toContain('findNodeHandle');
     expect(source).toContain('AccessibilityInfo.setAccessibilityFocus');
+    expect(source).toContain('optionRefs.current[value]');
+    expect(source).toContain('optionRefs.current.sedentary');
+    expect(source).toContain('[value]');
   });
 
   it('defines the approved gender combo box and progress accessibility', () => {
