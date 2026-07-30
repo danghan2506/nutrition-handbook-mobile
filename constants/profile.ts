@@ -1,6 +1,11 @@
-import type { ActivityLevel, Gender, ProfileDraft } from '@/types/profile';
+import type {
+  ActivityLevel,
+  Gender,
+  GoalType,
+  ProfileDraft,
+} from '@/types/profile';
 
-export const PROFILE_STEP_COUNT = 4;
+export const PROFILE_STEP_COUNT = 5;
 export const MIN_AGE = 5;
 export const MAX_AGE = 120;
 export const MIN_WEIGHT_KG = 20;
@@ -17,6 +22,7 @@ export const PROFILE_DEFAULTS: ProfileDraft = {
   gender: null,
   heightCm: DEFAULT_HEIGHT_CM,
   activityLevel: null,
+  goalType: null,
 };
 
 export const GENDER_OPTIONS: ReadonlyArray<{ label: string; value: Gender }> = [
@@ -69,6 +75,42 @@ export const ACTIVITY_LEVEL_OPTIONS: ReadonlyArray<{
   },
 ];
 
+export const NUTRITION_GOAL_OPTIONS: ReadonlyArray<{
+  value: GoalType;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'HEALTHY_EATING',
+    label: 'Ăn uống lành mạnh',
+    description:
+      'Xây dựng những lựa chọn cân bằng và phù hợp hơn mỗi ngày.',
+  },
+  {
+    value: 'WEIGHT_LOSS',
+    label: 'Giảm cân',
+    description:
+      'Hướng đến giảm cân từ từ với thói quen ăn uống bền vững.',
+  },
+  {
+    value: 'WEIGHT_MAINTENANCE',
+    label: 'Duy trì cân nặng',
+    description:
+      'Giữ cân nặng ổn định và duy trì nhịp sống hiện tại.',
+  },
+  {
+    value: 'WEIGHT_GAIN',
+    label: 'Tăng cân',
+    description:
+      'Tăng cân có chủ đích với nguồn dinh dưỡng phù hợp.',
+  },
+  {
+    value: 'MUSCLE_GAIN',
+    label: 'Tăng cường cơ bắp',
+    description:
+      'Hỗ trợ phát triển cơ bắp bằng dinh dưỡng và vận động.',
+  },
+];
 export const profileCopy = {
   back: 'Quay lại',
   continue: 'Tiếp tục',
@@ -92,6 +134,10 @@ export const profileCopy = {
   activityBody: 'Chọn mức gần với nhịp sinh hoạt thông thường của bạn nhất.',
   activityNote: 'Bạn không cần khớp hoàn toàn với mọi ví dụ.',
   activityRequired: 'Vui lòng chọn mức độ hoạt động của bạn.',
+  goalKicker: 'MỤC TIÊU DINH DƯỠNG',
+  goalTitle: 'Bạn muốn tập trung vào điều gì nhất?',
+  goalBody: 'Chọn một mục tiêu chính phù hợp với bạn lúc này.',
+  goalRequired: 'Vui lòng chọn mục tiêu dinh dưỡng của bạn.',
   nameRequired: 'Vui lòng nhập tên của bạn.',
   ageInteger: 'Vui lòng nhập tuổi bằng số nguyên.',
   ageRange: 'Tuổi cần nằm trong khoảng 5–120.',

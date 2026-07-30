@@ -23,6 +23,10 @@ import {
   ActivityLevelSelect,
   type ActivityLevelSelectHandle,
 } from '@/components/profile/activity-level-select';
+import {
+  NutritionGoalSelect,
+  type NutritionGoalSelectHandle,
+} from '@/components/profile/nutrition-goal-select';
 import { GenderSelect } from '@/components/profile/gender-select';
 import {
   HeightRuler,
@@ -44,7 +48,7 @@ import {
 import type { ProfileDraft, ProfileStep } from '@/types/profile';
 
 type Errors = Partial<
-  Record<'name' | 'age' | 'weight' | 'gender' | 'activity', string>
+  Record<'name' | 'age' | 'weight' | 'gender' | 'activity' | 'goal', string>
 >;
 
 function announceValidationErrors(...messages: (string | undefined)[]) {
@@ -73,6 +77,7 @@ export default function ProfileSetupScreen() {
   > | null>(null);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<TextInput>(null);
+  const nutritionGoalSelectRef = useRef<NutritionGoalSelectHandle>(null);
   const ageInputRef = useRef<TextInput>(null);
   const weightInputRef = useRef<TextInput>(null);
   const heightRulerRef = useRef<HeightRulerHandle>(null);
@@ -99,6 +104,9 @@ export default function ProfileSetupScreen() {
     }
     if (step === 2) {
       heightRulerRef.current?.focus();
+    }
+    if (step === 4) {
+      nutritionGoalSelectRef.current?.focus();
     }
     if (step === 3) {
       activityLevelSelectRef.current?.focus();
@@ -196,6 +204,19 @@ export default function ProfileSetupScreen() {
     });
   };
 
+  const continueFromActivity = () => {
+    runGuardedAction(() => {
+      if (!draft.activityLevel) {
+        setErrors({ activity: profileCopy.activityRequired });
+        announceValidationErrors(profileCopy.activityRequired);
+        return false;
+      }
+      setErrors({});
+      changeStep(4, 'forward');
+      return true;
+    });
+  };
+
   const finish = () => {
     runGuardedAction(() => {
       const nameResult = validateName(draft.name);
@@ -231,6 +252,12 @@ export default function ProfileSetupScreen() {
         announceValidationErrors(profileCopy.activityRequired);
         changeStep(3, 'back');
         return true;
+      }
+
+      if (!draft.goalType) {
+        setErrors({ goal: profileCopy.goalRequired });
+        announceValidationErrors(profileCopy.goalRequired);
+        return false;
       }
 
       // Persistence is intentionally deferred until a storage design is approved.
@@ -464,6 +491,39 @@ export default function ProfileSetupScreen() {
                   </Text>
                   <PrimaryAction
                     disabled={transitionPending || !draft.activityLevel}
+                    label={profileCopy.continue}
+                    onPress={continueFromActivity}
+                  />
+                </>
+              ) : null}
+              {step === 4 ? (
+                <>
+                  <Text className="text-[12px] font-extrabold tracking-[1px] text-label-slate">
+                    {profileCopy.goalKicker}
+                  </Text>
+                  <Text className="mt-2 font-rounded text-[31px] font-extrabold leading-[37px] text-ink-navy">
+                    {profileCopy.goalTitle}
+                  </Text>
+                  <Text className="mt-3 text-[15px] leading-6 text-soft-slate">
+                    {profileCopy.goalBody}
+                  </Text>
+                  <View className="mt-6">
+                    <NutritionGoalSelect
+                      ref={nutritionGoalSelectRef}
+                      disabled={transitionPending}
+                      error={errors.goal}
+                      onChange={(goalType) => {
+                        setDraft((current) => ({ ...current, goalType }));
+                        setErrors((current) => ({
+                          ...current,
+                          goal: undefined,
+                        }));
+                      }}
+                      value={draft.goalType}
+                    />
+                  </View>
+                  <PrimaryAction
+                    disabled={transitionPending || !draft.goalType}
                     label={profileCopy.finish}
                     onPress={finish}
                   />

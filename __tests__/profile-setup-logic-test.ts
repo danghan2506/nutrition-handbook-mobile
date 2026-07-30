@@ -8,14 +8,16 @@ import {
 } from '@/lib/profile-setup';
 import {
   ACTIVITY_LEVEL_OPTIONS,
+  NUTRITION_GOAL_OPTIONS,
   PROFILE_DEFAULTS,
   PROFILE_STEP_COUNT,
 } from '@/constants/profile';
 
 describe('profile setup logic', () => {
-  it('defines four activity choices with an initially empty activity level', () => {
-    expect(PROFILE_STEP_COUNT).toBe(4);
+  it('defines the activity and nutrition-goal profile steps', () => {
+    expect(PROFILE_STEP_COUNT).toBe(5);
     expect(PROFILE_DEFAULTS.activityLevel).toBeNull();
+    expect(PROFILE_DEFAULTS.goalType).toBeNull();
     expect(ACTIVITY_LEVEL_OPTIONS.map((option) => option.value)).toEqual([
       'sedentary',
       'light',
@@ -25,6 +27,38 @@ describe('profile setup logic', () => {
     expect(
       ACTIVITY_LEVEL_OPTIONS.every((option) => option.details.length >= 3),
     ).toBe(true);
+    expect(NUTRITION_GOAL_OPTIONS).toEqual([
+      {
+        value: 'HEALTHY_EATING',
+        label: 'Ăn uống lành mạnh',
+        description:
+          'Xây dựng những lựa chọn cân bằng và phù hợp hơn mỗi ngày.',
+      },
+      {
+        value: 'WEIGHT_LOSS',
+        label: 'Giảm cân',
+        description:
+          'Hướng đến giảm cân từ từ với thói quen ăn uống bền vững.',
+      },
+      {
+        value: 'WEIGHT_MAINTENANCE',
+        label: 'Duy trì cân nặng',
+        description:
+          'Giữ cân nặng ổn định và duy trì nhịp sống hiện tại.',
+      },
+      {
+        value: 'WEIGHT_GAIN',
+        label: 'Tăng cân',
+        description:
+          'Tăng cân có chủ đích với nguồn dinh dưỡng phù hợp.',
+      },
+      {
+        value: 'MUSCLE_GAIN',
+        label: 'Tăng cường cơ bắp',
+        description:
+          'Hỗ trợ phát triển cơ bắp bằng dinh dưỡng và vận động.',
+      },
+    ]);
   });
 
   it('trims names and rejects an empty result', () => {
