@@ -16,7 +16,7 @@ export function WeekDatePicker({
   onSelectDate,
 }: WeekDatePickerProps) {
   return (
-    <View className="flex-row gap-1" accessibilityRole="radiogroup">
+    <View className="w-[308px] self-center flex-row justify-between" accessibilityRole="radiogroup">
       {days.map((day) => {
         const isSelected = day.date === selectedDate;
         const isToday = day.date === today;
@@ -30,7 +30,7 @@ export function WeekDatePicker({
             }`}
             accessibilityHint={isToday ? 'Hôm nay' : undefined}
             accessibilityState={{ selected: isSelected }}
-            className={`min-h-11 flex-1 items-center justify-center rounded-xl border px-1 py-2 active:bg-peach ${
+            className={`h-11 w-11 items-center justify-center rounded-xl border px-1 py-2 active:bg-peach ${
               isSelected ? 'border-apricot bg-peach' : 'border-transparent bg-surface'
             }`}
             onPress={() => onSelectDate(day.date)}>
