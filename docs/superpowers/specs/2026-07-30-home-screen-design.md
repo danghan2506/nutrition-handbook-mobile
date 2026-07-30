@@ -1,7 +1,7 @@
 # AURALE Home Screen Design
 
 **Date:** 2026-07-30
-**Status:** Awaiting user approval
+**Status:** Approved
 **Scope:** Mock-data Home screen and four-tab signed-in navigation
 
 ## Purpose
