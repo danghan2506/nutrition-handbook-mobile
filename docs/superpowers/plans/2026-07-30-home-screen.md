@@ -890,7 +890,7 @@ Add focused source-contract assertions:
 ```ts
 expect(homeSource).toContain('useWindowDimensions');
 expect(homeSource).toContain('fontScale');
-expect(homeSource).toContain('useReducedMotion');
+expect(allHomeSources).toContain('useReducedMotion');
 expect(homeSource).toContain('max-w-[520px]');
 expect(allHomeSources).toContain('accessibilityLiveRegion="polite"');
 expect(allHomeSources).toContain('fontVariant');
@@ -969,3 +969,4 @@ git commit -m "test: verify home accessibility states"
 ```
 
 If no production adjustment was needed, commit only meaningful new regression assertions. Do not create an empty commit.
+
