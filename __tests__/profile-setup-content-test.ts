@@ -127,7 +127,7 @@ describe('profile setup content', () => {
     expect(source).not.toContain('Có thể điều chỉnh');
   });
 
-  it('composes exactly four local-state steps without nickname or persistence', () => {
+  it('composes exactly five local-state steps without nickname or persistence', () => {
     const source = readFileSync(
       join(process.cwd(), 'app', 'profile-setup.tsx'),
       'utf8',
@@ -154,6 +154,21 @@ describe('profile setup content', () => {
     expect(source).toContain(
       'disabled={transitionPending || !draft.activityLevel}',
     );
+    expect(source).toContain('step === 4');
+    expect(source).toContain('<NutritionGoalSelect');
+    expect(source).toContain('value={draft.goalType}');
+    expect(source).toContain("changeStep(4, 'forward')");
+    expect(source).toContain('profileCopy.goalRequired');
+    expect(source).toContain('nutritionGoalSelectRef.current?.focus()');
+    expect(source).toContain('ref={nutritionGoalSelectRef}');
+    expect(source).toContain(
+      'setDraft((current) => ({ ...current, goalType }))',
+    );
+    expect(source).toContain(
+      'disabled={transitionPending || !draft.goalType}',
+    );
+    expect(source).toContain('label={profileCopy.continue}');
+    expect(source).toContain('label={profileCopy.finish}');
     expect(source).toContain('useReducedMotion');
     expect(source).not.toContain('nickname');
     expect(source).not.toContain('AsyncStorage');
@@ -176,7 +191,7 @@ describe('profile setup content', () => {
     expect(profile).toContain(
       'createInteractionLock(setTransitionPending)',
     );
-    expect(guardedActions).toHaveLength(5);
+    expect(guardedActions).toHaveLength(6);
     expect(profile).toContain(
       'const transitionDuration = reduceMotion ? 160 : 220',
     );
