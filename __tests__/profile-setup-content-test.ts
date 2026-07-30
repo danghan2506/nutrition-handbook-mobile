@@ -45,6 +45,36 @@ describe('profile setup content', () => {
     expect(source).toContain('text-[15px] font-extrabold text-ink-navy');
   });
 
+  it('implements an accessible single-choice nutrition-goal card list', () => {
+    const sourcePath = join(
+      process.cwd(),
+      'components',
+      'profile',
+      'nutrition-goal-select.tsx',
+    );
+
+    expect(existsSync(sourcePath)).toBe(true);
+    if (!existsSync(sourcePath)) {
+      return;
+    }
+
+    const source = readFileSync(sourcePath, 'utf8');
+
+    expect(source).toContain('NUTRITION_GOAL_OPTIONS.map');
+    expect(source).toContain('accessibilityRole="radiogroup"');
+    expect(source).toContain('accessibilityRole="radio"');
+    expect(source).toContain('checked: isSelected');
+    expect(source).toContain(
+      'accessibilityLabel={`${option.label}. ${option.description}`}',
+    );
+    expect(source).toContain('onPress={() => onChange(option.value)}');
+    expect(source).toContain('export type NutritionGoalSelectHandle');
+    expect(source).toMatch(/forwardRef<\s*NutritionGoalSelectHandle/);
+    expect(source).toContain('AccessibilityInfo.setAccessibilityFocus');
+    expect(source).toContain('optionRefs.current.HEALTHY_EATING');
+    expect(source).toContain('✓');
+    expect(source).toContain('accessibilityLiveRegion="polite"');
+  });
   it('defines the approved gender combo box and progress accessibility', () => {
     const root = process.cwd();
     const constants = readFileSync(join(root, 'constants', 'profile.ts'), 'utf8');
