@@ -4,6 +4,7 @@ import Svg, { Circle } from 'react-native-svg';
 import {
   getAssessmentLabel,
   getCalorieProgress,
+  getCalorieTargetLabel,
   getCompletenessMessage,
 } from '@/lib/dashboard-display';
 import type { DashboardData, NumericTarget } from '@/types/dashboard';
@@ -40,7 +41,8 @@ export function DailyNutritionSummary({
     nutritionTotals.caloriesKcal,
     targets.caloriesKcal,
   );
-  const calorieTarget = formatRange(targets.caloriesKcal, ' kcal');
+  const calorieTargetLabel = getCalorieTargetLabel(targets.caloriesKcal);
+  const hasCalorieMaximum = (targets.caloriesKcal?.max ?? 0) > 0;
   const proteinTarget = formatRange(targets.proteinG, ' g');
   const completenessMessage = getCompletenessMessage(nutritionTotals.dataCompleteness);
   const assessmentLabel = dailyAssessment
@@ -89,9 +91,11 @@ export function DailyNutritionSummary({
               : `${nutritionTotals.caloriesKcal} kcal`}
           </Text>
           <Text className="text-[13px] text-soft-slate">
-            {calorieTarget ? `Mục tiêu ${calorieTarget}` : 'Chưa có mục tiêu calo'}
+            {calorieTargetLabel}
           </Text>
-          <Text className="text-[13px] text-soft-slate">so với mức tối đa</Text>
+          {hasCalorieMaximum ? (
+            <Text className="text-[13px] text-soft-slate">so với mức tối đa</Text>
+          ) : null}
         </View>
       </View>
 

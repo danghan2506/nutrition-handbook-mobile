@@ -1,6 +1,7 @@
 import {
   getAssessmentLabel,
   getCalorieProgress,
+  getCalorieTargetLabel,
   getCompletenessMessage,
 } from '@/lib/dashboard-display';
 
@@ -16,6 +17,12 @@ test('turns completeness into supportive copy instead of a percentage', () => {
   expect(getCompletenessMessage(0.96)).toBeNull();
 });
 
+test('labels supplied calorie targets without inventing an upper bound', () => {
+  expect(getCalorieTargetLabel({ min: 1800, max: 2100 })).toBe('Mục tiêu 1800–2100 kcal');
+  expect(getCalorieTargetLabel({ max: 2100 })).toBe('Mục tiêu tối đa 2100 kcal');
+  expect(getCalorieTargetLabel({ min: 900 })).toBe('Mục tiêu từ 900 kcal');
+  expect(getCalorieTargetLabel()).toBe('Chưa có mục tiêu calo');
+});
 test('maps assessment status without calculating a score', () => {
   expect(getAssessmentLabel('PENDING', null)).toBe('Đang cập nhật điểm');
   expect(getAssessmentLabel('FAILED', null)).toBe('Chưa thể cập nhật điểm');
