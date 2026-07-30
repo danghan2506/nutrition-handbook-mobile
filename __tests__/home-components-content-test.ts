@@ -21,3 +21,30 @@ test('recommendation displays response text without a press action', () => {
   expect(recommendation).not.toContain('Pressable');
   expect(recommendation).not.toContain('onPress');
 });
+
+test('week picker exposes today and selected state without a month calendar', () => {
+  const picker = source('components/home/week-date-picker.tsx');
+  expect(picker).toContain('accessibilityRole="button"');
+  expect(picker).toContain('accessibilityState={{ selected: isSelected }}');
+  expect(picker).toContain("accessibilityHint={isToday ? 'Hôm nay' : undefined}");
+  expect(picker).not.toContain('Modal');
+  expect(picker).not.toContain('DateTimePicker');
+});
+
+test('meal rows expose status text but are not pressable', () => {
+  const meals = source('components/home/meal-summary-list.tsx');
+  expect(meals).toContain('formatMealTime');
+  expect(meals).toContain('PENDING');
+  expect(meals).toContain('FAILED');
+  expect(meals).not.toContain('Pressable');
+  expect(meals).not.toContain('onPress');
+});
+
+test('shared states provide skeleton, neutral empty copy, and retry', () => {
+  const states = source('components/home/home-placeholder-state.tsx');
+  expect(states).toContain('Chưa có bữa ăn nào trong ngày này');
+  expect(states).toContain('Chưa tải được dữ liệu của ngày này.');
+  expect(states).toContain('Thử lại');
+  expect(states).toContain('accessibilityLiveRegion="polite"');
+  expect(states).not.toContain('ActivityIndicator');
+});
