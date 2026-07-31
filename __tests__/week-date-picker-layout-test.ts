@@ -1,6 +1,7 @@
 import {
   getWeekDatePickerLayout,
   HOME_CONTENT_HORIZONTAL_PADDING,
+  HOME_CONTENT_MAX_WIDTH,
   MIN_WEEK_DATE_TARGET_SIZE,
   WEEK_DATE_COUNT,
 } from '@/lib/week-date-picker-layout';
@@ -28,4 +29,21 @@ test('keeps the normal 20px content alignment once seven targets fit', () => {
     horizontalMargin: 0,
     dayWidth: MIN_WEEK_DATE_TARGET_SIZE,
   });
+});
+
+test('caps a 500px viewport to the Home content container', () => {
+  const layout = getWeekDatePickerLayout(500);
+
+  expect(layout.stripWidth).toBe(HOME_CONTENT_MAX_WIDTH);
+  expect(layout.horizontalMargin).toBe(0);
+  expect(layout.isFullBleed).toBe(false);
+});
+
+test('keeps a wide tablet strip within the capped content container', () => {
+  const layout = getWeekDatePickerLayout(1024);
+
+  expect(layout.stripWidth).toBe(HOME_CONTENT_MAX_WIDTH);
+  expect(layout.stripWidth).toBeLessThanOrEqual(HOME_CONTENT_MAX_WIDTH);
+  expect(layout.horizontalMargin).toBe(0);
+  expect(layout.isFullBleed).toBe(false);
 });
