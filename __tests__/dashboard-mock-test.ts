@@ -13,6 +13,9 @@ describe('dashboard mock data source', () => {
     expect(first?.nutritionTotals.caloriesKcal).toBe(1850);
     expect(first?.targets.caloriesKcal).toEqual({ min: 1800, max: 2100 });
     expect(first?.topRecommendations[0]?.recommendationCode).toBe('ADD_FIBER');
+    expect(first?.topRecommendations[0]?.text).toBe(
+      'Thêm một món giàu chất xơ để ngày ăn uống cân bằng hơn.',
+    );
     expect(first).not.toBe(second);
   });
 

@@ -25,9 +25,11 @@ it('uses AURALE styling, Lucide icons, and existing haptics', () => {
   expect(layout).toContain('#FF9E7A');
   expect(layout).toContain('#697386');
   expect(layout).toContain('#FFF0E7');
-  expect(layout).toContain('h-11 w-11');
-  expect(layout).toContain('size={23}');
+  expect(layout).toContain('h-7 w-7');
+  expect(layout).toContain('size={20}');
   expect(layout).toContain('strokeWidth={2}');
+  expect(layout).toContain('fontSize: 10');
+  expect(layout).toContain('lineHeight: 12');
   expect(layout).not.toContain('height:');
 });
 

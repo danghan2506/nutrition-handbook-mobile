@@ -22,10 +22,10 @@ function TabIcon({
 }) {
   return (
     <View
-      className={`h-11 w-11 items-center justify-center rounded-2xl ${
+      className={`h-7 w-7 items-center justify-center rounded-xl ${
         focused ? 'bg-[#FFF0E7]' : 'bg-transparent'
       }`}>
-      <Icon color={color} size={23} strokeWidth={2} />
+      <Icon color={color} size={20} strokeWidth={2} />
     </View>
   );
 }
@@ -53,7 +53,8 @@ export default function TabLayout() {
           borderTopColor: '#E7DDD3',
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
+          lineHeight: 12,
           fontWeight: '600',
         },
       }}>

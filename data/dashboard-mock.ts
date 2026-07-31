@@ -63,7 +63,7 @@ const fixtures: Record<string, DashboardData> = {
       {
         recommendationCode: 'ADD_FIBER',
         priority: 'MEDIUM',
-        text: 'Add a fiber-rich food to support a more balanced day.',
+        text: 'Thêm một món giàu chất xơ để ngày ăn uống cân bằng hơn.',
       },
     ],
   },
