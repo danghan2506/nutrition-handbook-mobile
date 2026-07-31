@@ -22,6 +22,10 @@ export function shouldStackMacros(width: number, fontScale: number): boolean {
   return width < 380 || fontScale >= 1.35;
 }
 
+export function shouldAnimateNutritionRing(reduceMotion: boolean): boolean {
+  return !reduceMotion;
+}
+
 function formatRange(target?: NumericTarget, unit = ''): string | null {
   if (target?.min !== undefined && target.max !== undefined) {
     return `${target.min}–${target.max}${unit}`;
@@ -44,6 +48,9 @@ export function DailyNutritionSummary({
 }: DailyNutritionSummaryProps) {
   const { fontScale, width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
+  const ringEntering = shouldAnimateNutritionRing(reduceMotion)
+    ? FadeInUp.duration(220)
+    : undefined;
   const stackMacros = shouldStackMacros(width, fontScale);
   const calorieProgress = getCalorieProgress(
     nutritionTotals.caloriesKcal,
@@ -66,8 +73,7 @@ export function DailyNutritionSummary({
       </Text>
 
       <View className="mt-4 flex-row items-center gap-4">
-        <Animated.View
-          entering={reduceMotion ? undefined : FadeInUp.duration(220)}>
+        <Animated.View entering={ringEntering}>
           <Svg width={96} height={96} viewBox="0 0 100 100" accessible={false}>
             <Circle
               cx="50"
@@ -164,7 +170,7 @@ export function DailyNutritionSummary({
       {completenessMessage ? (
         <Text
           accessibilityLiveRegion="polite"
-          className="mt-5 text-[13px] leading-5 text-soft-slate">
+          className="mt-5 text-[14px] leading-5 text-soft-slate">
           {completenessMessage}
         </Text>
       ) : null}

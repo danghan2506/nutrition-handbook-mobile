@@ -1,10 +1,4 @@
-import {
-  getWeekDatePickerLayout,
-  HOME_CONTENT_HORIZONTAL_PADDING,
-  HOME_CONTENT_MAX_WIDTH,
-  MIN_WEEK_DATE_TARGET_SIZE,
-  WEEK_DATE_COUNT,
-} from '@/lib/week-date-picker-layout';
+import { getWeekDatePickerLayout } from '@/lib/week-date-picker-layout';
 
 test('uses the viewport as a full-bleed strip on a 320px phone', () => {
   const layout = getWeekDatePickerLayout(320);
@@ -12,38 +6,35 @@ test('uses the viewport as a full-bleed strip on a 320px phone', () => {
   expect(layout).toEqual({
     isFullBleed: true,
     stripWidth: 320,
-    horizontalMargin: -HOME_CONTENT_HORIZONTAL_PADDING,
-    dayWidth: 320 / WEEK_DATE_COUNT,
+    horizontalMargin: -20,
+    dayWidth: 320 / 7,
   });
-  expect(layout.dayWidth).toBeGreaterThanOrEqual(MIN_WEEK_DATE_TARGET_SIZE);
+  expect(layout.dayWidth).toBeGreaterThanOrEqual(44);
 });
 
 test('keeps the normal 20px content alignment once seven targets fit', () => {
-  const fittingViewportWidth =
-    WEEK_DATE_COUNT * MIN_WEEK_DATE_TARGET_SIZE +
-    HOME_CONTENT_HORIZONTAL_PADDING * 2;
-
-  expect(getWeekDatePickerLayout(fittingViewportWidth)).toEqual({
+  expect(getWeekDatePickerLayout(348)).toEqual({
     isFullBleed: false,
-    stripWidth: WEEK_DATE_COUNT * MIN_WEEK_DATE_TARGET_SIZE,
+    stripWidth: 308,
     horizontalMargin: 0,
-    dayWidth: MIN_WEEK_DATE_TARGET_SIZE,
+    dayWidth: 44,
   });
 });
 
-test('caps a 500px viewport to the Home content container', () => {
+test('uses the padded content width before reaching the shared cap', () => {
   const layout = getWeekDatePickerLayout(500);
 
-  expect(layout.stripWidth).toBe(HOME_CONTENT_MAX_WIDTH);
+  expect(layout.stripWidth).toBe(460);
+  expect(layout.dayWidth).toBeCloseTo(460 / 7);
   expect(layout.horizontalMargin).toBe(0);
   expect(layout.isFullBleed).toBe(false);
 });
 
-test('keeps a wide tablet strip within the capped content container', () => {
+test('caps a wide tablet strip at the shared 520px content width', () => {
   const layout = getWeekDatePickerLayout(1024);
 
-  expect(layout.stripWidth).toBe(HOME_CONTENT_MAX_WIDTH);
-  expect(layout.stripWidth).toBeLessThanOrEqual(HOME_CONTENT_MAX_WIDTH);
+  expect(layout.stripWidth).toBe(520);
+  expect(layout.dayWidth).toBeCloseTo(520 / 7);
   expect(layout.horizontalMargin).toBe(0);
   expect(layout.isFullBleed).toBe(false);
 });

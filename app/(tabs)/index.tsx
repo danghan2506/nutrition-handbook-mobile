@@ -20,6 +20,7 @@ import {
   createHomeDashboardRequestController,
   type HomeDashboardState,
 } from '@/lib/home-dashboard-request';
+import { HOME_CONTENT_LAYOUT } from '@/lib/week-date-picker-layout';
 
 export default function HomeScreen() {
   const today = useMemo(
@@ -66,7 +67,8 @@ export default function HomeScreen() {
       contentContainerClassName="px-5 pb-28 pt-6"
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}>
-      <View className="mx-auto w-full max-w-[520px] gap-6">
+      <View
+        className={`mx-auto w-full gap-6 ${HOME_CONTENT_LAYOUT.maxWidthClassName}`}>
         <TodayHeader
           selectedDate={selectedDate}
           today={today}

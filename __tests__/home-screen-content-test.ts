@@ -27,8 +27,11 @@ test('supports states without trends or persistence', () => {
   expect(source).not.toContain('useDashboardStore');
   expect(source).not.toContain('AddMeal');
 });
-test('keeps Home readable and scroll-clear across phone and web widths', () => {
-  expect(source).toContain('max-w-[520px]');
+
+test('consumes the shared content-width contract and keeps tab clearance', () => {
+  expect(source).toContain('HOME_CONTENT_LAYOUT');
+  expect(source).toContain('HOME_CONTENT_LAYOUT.maxWidthClassName');
+  expect(source).not.toContain('max-w-[520px]');
   expect(source).toContain('px-5 pb-28 pt-6');
   expect(source).not.toContain('height:');
 });

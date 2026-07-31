@@ -15,7 +15,22 @@ const homeComponentFiles = [
   'components/home/today-header.tsx',
   'components/home/week-date-picker.tsx',
 ];
-const allHomeSources = homeComponentFiles.map(source).join('\n');
+const homeSurfaceFiles = [
+  ...homeComponentFiles,
+  'app/(tabs)/_layout.tsx',
+  'app/(tabs)/explore.tsx',
+  'app/(tabs)/index.tsx',
+  'app/(tabs)/meals.tsx',
+  'app/(tabs)/profile.tsx',
+  'data/dashboard-mock.ts',
+  'lib/dashboard-date.ts',
+  'lib/dashboard-display.ts',
+  'lib/home-dashboard-request.ts',
+  'lib/week-date-picker-layout.ts',
+  'types/dashboard.ts',
+];
+const allHomeComponentSources = homeComponentFiles.map(source).join('\n');
+const allHomeSurfaceSources = homeSurfaceFiles.map(source).join('\n');
 
 test('daily summary uses SVG, contract helpers, and accessible text', () => {
   const summary = source('components/home/daily-nutrition-summary.tsx');
@@ -34,21 +49,24 @@ test('recommendation displays response text without a press action', () => {
   expect(recommendation).not.toContain('onPress');
 });
 
-test('week picker exposes today and selected state without a month calendar', () => {
+test('week picker exposes a named radio group with checked state', () => {
   const picker = source('components/home/week-date-picker.tsx');
   expect(picker).toContain('accessibilityRole="radiogroup"');
+  expect(picker).toContain('accessibilityLabel="Chọn ngày trong tuần"');
   expect(picker).toContain('accessibilityRole="radio"');
-  expect(picker).toContain('accessibilityState={{ selected: isSelected }}');
+  expect(picker).toContain('accessibilityState={{ checked: isSelected }}');
+  expect(picker).not.toContain('accessibilityState={{ selected:');
   expect(picker).toContain("accessibilityHint={isToday ? 'Hôm nay' : undefined}");
   expect(picker).not.toContain('Modal');
   expect(picker).not.toContain('DateTimePicker');
 });
 
-test('meal rows expose status text but are not pressable', () => {
+test('meal rows expose readable status text but are not pressable', () => {
   const meals = source('components/home/meal-summary-list.tsx');
   expect(meals).toContain('formatMealTime');
   expect(meals).toContain('PENDING');
   expect(meals).toContain('FAILED');
+  expect(meals).toContain('className="mt-3 text-[14px] text-soft-slate"');
   expect(meals).not.toContain('Pressable');
   expect(meals).not.toContain('onPress');
 });
@@ -62,13 +80,16 @@ test('shared states provide skeleton, neutral empty copy, and retry', () => {
   expect(states).not.toContain('ActivityIndicator');
 });
 
-test('week picker gives each visible day an equal, at least 44px target', () => {
+test('week picker gives each visible day an equal, growing 44px-minimum target', () => {
   const picker = source('components/home/week-date-picker.tsx');
-  expect(picker).toContain('h-11 min-w-11 flex-1');
+  expect(picker).toContain('min-h-11 min-w-11 flex-1');
+  expect(picker).not.toContain('className={`h-11 min-w-11');
+  expect(picker).toContain("isToday ? 'text-terracotta' : 'text-transparent'");
   expect(picker).toContain('getWeekDatePickerLayout(width)');
   expect(picker).toContain('width: layout.stripWidth');
   expect(picker).not.toContain('justify-between');
 });
+
 test.each([
   { width: 379, fontScale: 1, expected: true },
   { width: 380, fontScale: 1.35, expected: true },
@@ -87,26 +108,47 @@ test.each([
   },
 );
 
+test.each([
+  { reduceMotion: true, expected: false },
+  { reduceMotion: false, expected: true },
+])(
+  'ring animation decision is $expected when reduced motion is $reduceMotion',
+  ({ reduceMotion, expected }) => {
+    const shouldAnimateNutritionRing = (
+      DailyNutritionSummaryModule as unknown as {
+        shouldAnimateNutritionRing?: (isReducedMotion: boolean) => boolean;
+      }
+    ).shouldAnimateNutritionRing;
+
+    expect(shouldAnimateNutritionRing).toBeDefined();
+    expect(shouldAnimateNutritionRing?.(reduceMotion)).toBe(expected);
+  },
+);
+
 test('Home components own responsive, reduced-motion, and numeric accessibility', () => {
   const summary = source('components/home/daily-nutrition-summary.tsx');
 
   expect(summary).toContain('useWindowDimensions');
   expect(summary).toContain('fontScale');
   expect(summary).toContain('useReducedMotion');
-  expect(summary).toContain('entering={reduceMotion ? undefined');
+  expect(summary).toContain('shouldAnimateNutritionRing(reduceMotion)');
+  expect(summary).toContain('entering={ringEntering}');
   expect(summary).toContain("stackMacros ? 'flex-col");
   expect(summary).toContain(": 'flex-row");
-  expect(allHomeSources).toContain('accessibilityLiveRegion="polite"');
-  expect(allHomeSources).toContain('fontVariant');
+  expect(summary).toContain(
+    'className="mt-5 text-[14px] leading-5 text-soft-slate"',
+  );
+  expect(allHomeComponentSources).toContain('accessibilityLiveRegion="polite"');
+  expect(allHomeComponentSources).toContain('fontVariant');
   expect(summary).toContain(
     'accessibilityLiveRegion="polite"\n          style={{ fontVariant',
   );
 });
 
-test('Home components exclude unapproved or pressuring dashboard content', () => {
-  expect(allHomeSources).not.toContain('Calo còn lại');
-  expect(allHomeSources).not.toContain('Tập luyện');
-  expect(allHomeSources).not.toContain('streak');
-  expect(allHomeSources).not.toContain('Nâng cấp gói');
-  expect(allHomeSources).not.toContain('dashboard/trends');
+test('the complete Home surface excludes unapproved or pressuring content', () => {
+  expect(allHomeSurfaceSources).not.toContain('Calo còn lại');
+  expect(allHomeSurfaceSources).not.toContain('Tập luyện');
+  expect(allHomeSurfaceSources).not.toContain('streak');
+  expect(allHomeSurfaceSources).not.toContain('Nâng cấp gói');
+  expect(allHomeSurfaceSources).not.toContain('dashboard/trends');
 });

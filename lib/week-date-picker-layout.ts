@@ -1,5 +1,8 @@
-export const HOME_CONTENT_HORIZONTAL_PADDING = 20;
-export const HOME_CONTENT_MAX_WIDTH = 440;
+export const HOME_CONTENT_LAYOUT = {
+  horizontalPadding: 20,
+  maxWidth: 520,
+  maxWidthClassName: 'max-w-[520px]',
+} as const;
 export const MIN_WEEK_DATE_TARGET_SIZE = 44;
 export const WEEK_DATE_COUNT = 7;
 
@@ -14,8 +17,8 @@ export type WeekDatePickerLayout = {
 
 export function getWeekDatePickerLayout(viewportWidth: number): WeekDatePickerLayout {
   const contentWidth = Math.min(
-    Math.max(viewportWidth - HOME_CONTENT_HORIZONTAL_PADDING * 2, 0),
-    HOME_CONTENT_MAX_WIDTH,
+    Math.max(viewportWidth - HOME_CONTENT_LAYOUT.horizontalPadding * 2, 0),
+    HOME_CONTENT_LAYOUT.maxWidth,
   );
   const isFullBleed = contentWidth < MIN_REGULAR_CONTENT_WIDTH;
   const stripWidth = isFullBleed ? viewportWidth : contentWidth;
@@ -23,7 +26,7 @@ export function getWeekDatePickerLayout(viewportWidth: number): WeekDatePickerLa
   return {
     isFullBleed,
     stripWidth,
-    horizontalMargin: isFullBleed ? -HOME_CONTENT_HORIZONTAL_PADDING : 0,
+    horizontalMargin: isFullBleed ? -HOME_CONTENT_LAYOUT.horizontalPadding : 0,
     dayWidth: stripWidth / WEEK_DATE_COUNT,
   };
 }

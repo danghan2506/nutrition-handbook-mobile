@@ -26,7 +26,8 @@ export function WeekDatePicker({
         width: layout.stripWidth,
         marginHorizontal: layout.horizontalMargin,
       }}
-      accessibilityRole="radiogroup">
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Chọn ngày trong tuần">
       {days.map((day) => {
         const isSelected = day.date === selectedDate;
         const isToday = day.date === today;
@@ -39,8 +40,8 @@ export function WeekDatePicker({
               isToday ? ', hôm nay' : ''
             }`}
             accessibilityHint={isToday ? 'Hôm nay' : undefined}
-            accessibilityState={{ selected: isSelected }}
-            className={`h-11 min-w-11 flex-1 items-center justify-center rounded-xl border px-1 py-2 active:bg-peach ${
+            accessibilityState={{ checked: isSelected }}
+            className={`min-h-11 min-w-11 flex-1 items-center justify-center rounded-xl border px-1 py-2 active:bg-peach ${
               isSelected ? 'border-apricot bg-peach' : 'border-transparent bg-surface'
             }`}
             onPress={() => onSelectDate(day.date)}>
@@ -57,9 +58,13 @@ export function WeekDatePicker({
               style={{ fontVariant: ['tabular-nums'] }}>
               {day.dayOfMonth}
             </Text>
-            {isToday ? (
-              <Text className="mt-1 text-[10px] font-bold text-terracotta">Hôm nay</Text>
-            ) : null}
+            <Text
+              accessible={false}
+              className={`mt-1 text-[14px] leading-4 ${
+                isToday ? 'text-terracotta' : 'text-transparent'
+              }`}>
+              ●
+            </Text>
           </Pressable>
         );
       })}

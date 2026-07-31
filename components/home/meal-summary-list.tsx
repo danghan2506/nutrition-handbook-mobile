@@ -68,7 +68,7 @@ export function MealSummaryList({ meals, timezone }: MealSummaryListProps) {
           </View>
           <Text
             accessibilityLiveRegion="polite"
-            className="mt-3 text-[13px] text-soft-slate"
+            className="mt-3 text-[14px] text-soft-slate"
             style={{ fontVariant: ['tabular-nums'] }}>
             {getMealAssessmentText(meal)}
           </Text>
