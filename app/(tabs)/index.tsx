@@ -1,98 +1,94 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { DailyNutritionSummary } from '@/components/home/daily-nutrition-summary';
+import {
+  HomeEmptyState,
+  HomeErrorState,
+  HomeLoadingState,
+} from '@/components/home/home-placeholder-state';
+import { MealSummaryList } from '@/components/home/meal-summary-list';
+import { RecommendationBanner } from '@/components/home/recommendation-banner';
+import { TodayHeader } from '@/components/home/today-header';
+import { WeekDatePicker } from '@/components/home/week-date-picker';
+import { ScrollView, View } from '@/components/ui/tw';
+import {
+  dashboardDataSource,
+  DASHBOARD_MOCK_TIMEZONE,
+} from '@/data/dashboard-mock';
+import { getBusinessDate, getCalendarWeek } from '@/lib/dashboard-date';
+import type { DashboardData } from '@/types/dashboard';
+
+type HomeState =
+  | { status: 'loading' }
+  | { status: 'ready'; data: DashboardData }
+  | { status: 'empty' }
+  | { status: 'error' };
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const today = useMemo(
+    () => getBusinessDate(new Date(), DASHBOARD_MOCK_TIMEZONE),
+    [],
+  );
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [state, setState] = useState<HomeState>({ status: 'loading' });
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const week = useMemo(() => getCalendarWeek(selectedDate), [selectedDate]);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    let active = true;
+    setState({ status: 'loading' });
+
+    dashboardDataSource.getDashboard(selectedDate)
+      .then((data) => {
+        if (active) {
+          setState(data ? { status: 'ready', data } : { status: 'empty' });
+        }
+      })
+      .catch(() => {
+        if (active) setState({ status: 'error' });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedDate, reloadVersion]);
+
+  return (
+    <ScrollView
+      className="flex-1 bg-paper"
+      contentContainerClassName="px-5 pb-28 pt-6"
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}>
+      <View className="mx-auto w-full max-w-[440px] gap-6">
+        <TodayHeader
+          selectedDate={selectedDate}
+          today={today}
+          onReturnToToday={() => setSelectedDate(today)}
+        />
+        <WeekDatePicker
+          days={week}
+          selectedDate={selectedDate}
+          today={today}
+          onSelectDate={setSelectedDate}
+        />
+
+        {state.status === 'loading' ? <HomeLoadingState /> : null}
+        {state.status === 'empty' ? <HomeEmptyState /> : null}
+        {state.status === 'error' ? (
+          <HomeErrorState onRetry={() => setReloadVersion((version) => version + 1)} />
+        ) : null}
+        {state.status === 'ready' ? (
+          <>
+            <DailyNutritionSummary
+              nutritionTotals={state.data.nutritionTotals}
+              targets={state.data.targets}
+              dailyAssessment={state.data.dailyAssessment}
+            />
+            <RecommendationBanner recommendation={state.data.topRecommendations[0]} />
+            <MealSummaryList meals={state.data.meals} timezone={state.data.timezone} />
+          </>
+        ) : null}
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
