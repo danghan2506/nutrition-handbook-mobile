@@ -21,7 +21,7 @@ export function WeekDatePicker({
 
   return (
     <View
-      className="w-full flex-row"
+      className="w-full flex-row self-center"
       style={{
         width: layout.stripWidth,
         marginHorizontal: layout.horizontalMargin,
@@ -34,7 +34,7 @@ export function WeekDatePicker({
         return (
           <Pressable
             key={day.date}
-            accessibilityRole="button"
+            accessibilityRole="radio"
             accessibilityLabel={`${day.weekdayLabel}, ngày ${day.dayOfMonth}${
               isToday ? ', hôm nay' : ''
             }`}
@@ -53,7 +53,8 @@ export function WeekDatePicker({
             <Text
               className={`mt-1 text-[15px] font-bold ${
                 isSelected ? 'text-ink-navy' : 'text-soft-slate'
-              }`}>
+              }`}
+              style={{ fontVariant: ['tabular-nums'] }}>
               {day.dayOfMonth}
             </Text>
             {isToday ? (

@@ -8,7 +8,9 @@ export default function MealsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}>
       <View className="mx-auto w-full max-w-[440px]">
-        <Text className="font-rounded text-[30px] font-extrabold text-ink-navy">
+        <Text
+          accessibilityRole="header"
+          className="font-rounded text-[30px] font-extrabold text-ink-navy">
           Bữa ăn
         </Text>
         <Text className="mt-3 text-[16px] leading-6 text-soft-slate">

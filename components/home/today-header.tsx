@@ -18,8 +18,14 @@ export function TodayHeader({
   return (
     <View className="flex-row items-center justify-between gap-3">
       <View className="min-w-0 flex-1">
-        <Text className="text-[25px] font-bold text-ink-navy">Nhật ký ăn uống</Text>
-        <Text className="mt-1 text-[14px] capitalize text-soft-slate">
+        <Text
+          accessibilityRole="header"
+          className="text-[25px] font-bold text-ink-navy">
+          Nhật ký ăn uống
+        </Text>
+        <Text
+          className="mt-1 text-[14px] capitalize text-soft-slate"
+          style={{ fontVariant: ['tabular-nums'] }}>
           {formatBusinessDateLabel(selectedDate)}
         </Text>
       </View>

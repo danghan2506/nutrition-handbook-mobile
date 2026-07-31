@@ -52,17 +52,24 @@ export function MealSummaryList({ meals, timezone }: MealSummaryListProps) {
               <Text className="text-[16px] font-bold text-ink-navy">
                 {mealTypeLabels[meal.mealType]}
               </Text>
-              <Text className="mt-1 text-[13px] text-soft-slate">
+              <Text
+                className="mt-1 text-[13px] text-soft-slate"
+                style={{ fontVariant: ['tabular-nums'] }}>
                 {formatMealTime(meal.eatenAt, timezone)}
               </Text>
             </View>
-            <Text className="text-[14px] font-bold text-ink-navy">
+            <Text
+              className="text-[14px] font-bold text-ink-navy"
+              style={{ fontVariant: ['tabular-nums'] }}>
               {meal.caloriesKcal === null
                 ? 'Chưa có dữ liệu'
                 : `${meal.caloriesKcal} kcal`}
             </Text>
           </View>
-          <Text className="mt-3 text-[13px] text-soft-slate">
+          <Text
+            accessibilityLiveRegion="polite"
+            className="mt-3 text-[13px] text-soft-slate"
+            style={{ fontVariant: ['tabular-nums'] }}>
             {getMealAssessmentText(meal)}
           </Text>
         </View>

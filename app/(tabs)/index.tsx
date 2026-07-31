@@ -66,7 +66,7 @@ export default function HomeScreen() {
       contentContainerClassName="px-5 pb-28 pt-6"
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}>
-      <View className="mx-auto w-full max-w-[440px] gap-6">
+      <View className="mx-auto w-full max-w-[520px] gap-6">
         <TodayHeader
           selectedDate={selectedDate}
           today={today}

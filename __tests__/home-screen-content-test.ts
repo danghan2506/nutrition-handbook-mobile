@@ -27,3 +27,8 @@ test('supports states without trends or persistence', () => {
   expect(source).not.toContain('useDashboardStore');
   expect(source).not.toContain('AddMeal');
 });
+test('keeps Home readable and scroll-clear across phone and web widths', () => {
+  expect(source).toContain('max-w-[520px]');
+  expect(source).toContain('px-5 pb-28 pt-6');
+  expect(source).not.toContain('height:');
+});

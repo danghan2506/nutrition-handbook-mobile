@@ -25,6 +25,16 @@ it('uses AURALE styling, Lucide icons, and existing haptics', () => {
   expect(layout).toContain('#FF9E7A');
   expect(layout).toContain('#697386');
   expect(layout).toContain('#FFF0E7');
+  expect(layout).toContain('h-11 w-11');
+  expect(layout).toContain('size={23}');
+  expect(layout).toContain('strokeWidth={2}');
+  expect(layout).not.toContain('height:');
+});
+
+it('preserves signed-in routing and visible tab labels', () => {
+  expect(layout).toContain('useAuthSession');
+  expect(layout).toContain("Redirect href={'/(auth)/login' as Href}");
+  expect(layout).not.toContain('tabBarShowLabel: false');
 });
 
 it.each([
@@ -35,6 +45,7 @@ it.each([
   const route = readFileSync(join(root, 'app', '(tabs)', file), 'utf8');
   expect(route).toContain(title);
   expect(route).toContain('contentInsetAdjustmentBehavior="automatic"');
+  expect(route).toContain('accessibilityRole="header"');
   expect(route).not.toContain('caloriesKcal');
   expect(route).not.toContain('healthyScore');
 });
