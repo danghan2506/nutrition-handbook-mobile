@@ -5,14 +5,15 @@ function source(file: string) {
   return readFileSync(join(process.cwd(), file), 'utf8');
 }
 
-test('keeps all seven date targets responsive inside a narrow full-bleed strip', () => {
-  const route = source('app/(tabs)/index.tsx');
+test('uses the shared viewport layout without scrolling or enlarged hit areas', () => {
   const picker = source('components/home/week-date-picker.tsx');
 
-  expect(route).toContain('className="-mx-5"');
-  expect(picker).toContain('w-full max-w-[308px]');
-  expect(picker).toContain('h-11 min-w-11 flex-1');
-  expect(picker).not.toMatch(/className="w-\[308px\]/);
+  expect(picker).toContain('useWindowDimensions');
+  expect(picker).toContain('getWeekDatePickerLayout(width)');
+  expect(picker).toContain('width: layout.stripWidth');
+  expect(picker).toContain('marginHorizontal: layout.horizontalMargin');
+  expect(picker).not.toContain('ScrollView');
+  expect(picker).not.toContain('hitSlop');
 });
 
 test('renders the ready Home sections in the approved order', () => {

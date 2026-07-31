@@ -72,14 +72,12 @@ export default function HomeScreen() {
           today={today}
           onReturnToToday={() => handleSelectDate(today)}
         />
-        <View className="-mx-5">
-          <WeekDatePicker
-            days={week}
-            selectedDate={selectedDate}
-            today={today}
-            onSelectDate={handleSelectDate}
-          />
-        </View>
+        <WeekDatePicker
+          days={week}
+          selectedDate={selectedDate}
+          today={today}
+          onSelectDate={handleSelectDate}
+        />
 
         {isCurrentState && state.status === 'loading' ? <HomeLoadingState /> : null}
         {isCurrentState && state.status === 'empty' ? <HomeEmptyState /> : null}

@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 
 import type { CalendarDay } from '@/lib/dashboard-date';
+import { getWeekDatePickerLayout } from '@/lib/week-date-picker-layout';
 
 type WeekDatePickerProps = {
   days: CalendarDay[];
@@ -15,9 +16,16 @@ export function WeekDatePicker({
   today,
   onSelectDate,
 }: WeekDatePickerProps) {
+  const { width } = useWindowDimensions();
+  const layout = getWeekDatePickerLayout(width);
+
   return (
     <View
-      className="w-full max-w-[308px] self-center flex-row"
+      className="w-full flex-row"
+      style={{
+        width: layout.stripWidth,
+        marginHorizontal: layout.horizontalMargin,
+      }}
       accessibilityRole="radiogroup">
       {days.map((day) => {
         const isSelected = day.date === selectedDate;

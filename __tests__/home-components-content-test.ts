@@ -52,6 +52,7 @@ test('shared states provide skeleton, neutral empty copy, and retry', () => {
 test('week picker gives each visible day an equal, at least 44px target', () => {
   const picker = source('components/home/week-date-picker.tsx');
   expect(picker).toContain('h-11 min-w-11 flex-1');
-  expect(picker).toContain('w-full max-w-[308px]');
+  expect(picker).toContain('getWeekDatePickerLayout(width)');
+  expect(picker).toContain('width: layout.stripWidth');
   expect(picker).not.toContain('justify-between');
 });
