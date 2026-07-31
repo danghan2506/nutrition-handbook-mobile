@@ -1,6 +1,6 @@
 import { ScrollView, Text, View } from '@/components/ui/tw';
 
-export default function AnalysisScreen() {
+export default function ProfileScreen() {
   return (
     <ScrollView
       className="flex-1 bg-cloud"
@@ -9,10 +9,10 @@ export default function AnalysisScreen() {
       showsVerticalScrollIndicator={false}>
       <View className="mx-auto w-full max-w-[440px]">
         <Text className="font-rounded text-[30px] font-extrabold text-ink-navy">
-          Phân tích
+          Bạn
         </Text>
         <Text className="mt-3 text-[16px] leading-6 text-soft-slate">
-          Xu hướng dinh dưỡng của bạn sẽ xuất hiện tại đây.
+          Hồ sơ và tùy chọn cá nhân sẽ xuất hiện tại đây.
         </Text>
       </View>
     </ScrollView>
