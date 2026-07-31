@@ -16,13 +16,10 @@ import {
   DASHBOARD_MOCK_TIMEZONE,
 } from '@/data/dashboard-mock';
 import { getBusinessDate, getCalendarWeek } from '@/lib/dashboard-date';
-import type { DashboardData } from '@/types/dashboard';
-
-type HomeState =
-  | { status: 'loading' }
-  | { status: 'ready'; data: DashboardData }
-  | { status: 'empty' }
-  | { status: 'error' };
+import {
+  createHomeDashboardRequestController,
+  type HomeDashboardState,
+} from '@/lib/home-dashboard-request';
 
 export default function HomeScreen() {
   const today = useMemo(
@@ -30,28 +27,38 @@ export default function HomeScreen() {
     [],
   );
   const [selectedDate, setSelectedDate] = useState(today);
-  const [state, setState] = useState<HomeState>({ status: 'loading' });
+  const [state, setState] = useState<HomeDashboardState>({
+    status: 'loading',
+    date: today,
+  });
   const [reloadVersion, setReloadVersion] = useState(0);
+  const requestController = useMemo(
+    () => createHomeDashboardRequestController(setState),
+    [],
+  );
   const week = useMemo(() => getCalendarWeek(selectedDate), [selectedDate]);
+  const isCurrentState = state.date === selectedDate;
+
+  function handleSelectDate(date: string) {
+    if (date === selectedDate) return;
+
+    requestController.invalidate();
+    setState({ status: 'loading', date });
+    setSelectedDate(date);
+  }
+
+  function handleRetry() {
+    requestController.invalidate();
+    setState({ status: 'loading', date: selectedDate });
+    setReloadVersion((version) => version + 1);
+  }
 
   useEffect(() => {
-    let active = true;
-    setState({ status: 'loading' });
-
-    dashboardDataSource.getDashboard(selectedDate)
-      .then((data) => {
-        if (active) {
-          setState(data ? { status: 'ready', data } : { status: 'empty' });
-        }
-      })
-      .catch(() => {
-        if (active) setState({ status: 'error' });
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedDate, reloadVersion]);
+    return requestController.request(
+      selectedDate,
+      () => dashboardDataSource.getDashboard(selectedDate),
+    );
+  }, [requestController, reloadVersion, selectedDate]);
 
   return (
     <ScrollView
@@ -63,21 +70,23 @@ export default function HomeScreen() {
         <TodayHeader
           selectedDate={selectedDate}
           today={today}
-          onReturnToToday={() => setSelectedDate(today)}
+          onReturnToToday={() => handleSelectDate(today)}
         />
-        <WeekDatePicker
-          days={week}
-          selectedDate={selectedDate}
-          today={today}
-          onSelectDate={setSelectedDate}
-        />
+        <View className="-mx-5">
+          <WeekDatePicker
+            days={week}
+            selectedDate={selectedDate}
+            today={today}
+            onSelectDate={handleSelectDate}
+          />
+        </View>
 
-        {state.status === 'loading' ? <HomeLoadingState /> : null}
-        {state.status === 'empty' ? <HomeEmptyState /> : null}
-        {state.status === 'error' ? (
-          <HomeErrorState onRetry={() => setReloadVersion((version) => version + 1)} />
+        {isCurrentState && state.status === 'loading' ? <HomeLoadingState /> : null}
+        {isCurrentState && state.status === 'empty' ? <HomeEmptyState /> : null}
+        {isCurrentState && state.status === 'error' ? (
+          <HomeErrorState onRetry={handleRetry} />
         ) : null}
-        {state.status === 'ready' ? (
+        {isCurrentState && state.status === 'ready' ? (
           <>
             <DailyNutritionSummary
               nutritionTotals={state.data.nutritionTotals}

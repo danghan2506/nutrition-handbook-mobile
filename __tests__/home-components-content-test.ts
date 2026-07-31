@@ -48,9 +48,10 @@ test('shared states provide skeleton, neutral empty copy, and retry', () => {
   expect(states).toContain('accessibilityLiveRegion="polite"');
   expect(states).not.toContain('ActivityIndicator');
 });
-test('week picker reserves a 44 by 44 target for each visible day', () => {
+
+test('week picker gives each visible day an equal, at least 44px target', () => {
   const picker = source('components/home/week-date-picker.tsx');
-  expect(picker).toContain('h-11 w-11');
-  expect(picker).toContain('justify-between');
-  expect(picker).not.toContain('flex-1');
+  expect(picker).toContain('h-11 min-w-11 flex-1');
+  expect(picker).toContain('w-full max-w-[308px]');
+  expect(picker).not.toContain('justify-between');
 });
