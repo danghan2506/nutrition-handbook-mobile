@@ -39,6 +39,10 @@ it('preserves signed-in routing and visible tab labels', () => {
   expect(layout).not.toContain('tabBarShowLabel: false');
 });
 
+it('keeps labels below icons so landscape tabs retain the regular navigator height', () => {
+  expect(layout).toContain("tabBarLabelPosition: 'below-icon'");
+});
+
 it.each([
   ['explore.tsx', 'Phân tích'],
   ['meals.tsx', 'Bữa ăn'],

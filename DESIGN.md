@@ -60,6 +60,7 @@ Banned: Inter as a default premium face; generic serif fonts; all-caps paragraph
 - Use a persistent four-item bottom tab bar for primary signed-in destinations: **Today**, **Insights**, **Meals**, and **You**.
 - The active tab uses Apricot Action plus a soft Peach Tint indicator; inactive tabs use Soft Slate. Each item has a custom friendly line icon and a clear label.
 - Tabs must have a 44 px minimum touch target. Keep the tab bar bright, simple, and easy to scan.
+- Keep labels below tab icons with `tabBarLabelPosition: 'below-icon'` so iPhone landscape retains the navigator's regular tab-bar height and safe area; the compact 28 px icon surface remains visual only while each tab keeps its 44 px minimum touch target.
 - Onboarding and authentication do not show the tab bar. Use a clear progress indicator for onboarding and simple back navigation for stack flows.
 
 ### Mascot and illustrations

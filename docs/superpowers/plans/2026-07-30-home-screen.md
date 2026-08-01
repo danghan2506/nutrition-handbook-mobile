@@ -833,6 +833,7 @@ screenOptions={{
 ```
 
 The focused icon sits on a small Peach Tint rounded surface; inactive uses a transparent surface. The compact visual surface is not the touch target: Expo Router's parent tab button remains at least 44 px, while the navigator manages selected semantics and safe area.
+Set `tabBarLabelPosition: 'below-icon'` so iPhone landscape does not switch to React Navigation's compact horizontal-label mode; this preserves the regular navigator tab height and navigator-managed safe area without changing the 28 px icon visual surface or 44 px tab touch target.
 
 - [ ] **Step 4: Replace Explore and add placeholder routes**
 
