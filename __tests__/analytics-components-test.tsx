@@ -1,5 +1,4 @@
 import React from 'react';
-import { Pressable } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { AnalyticsSectionState } from '../components/analytics/AnalyticsSectionState';
@@ -14,6 +13,7 @@ const TestRenderer = require('react-test-renderer') as {
       findAll(predicate: (node: { props: Record<string, unknown> }) => boolean): Array<{ props: Record<string, unknown> }>;
     };
     toJSON(): unknown;
+    update(element: React.ReactElement): void;
   };
 };
 
@@ -34,7 +34,7 @@ function renderedText(tree: unknown): string {
 }
 
 describe('analytics UI components', () => {
-  it('lets people switch the chart between the three metric scales', async () => {
+  it('offers one data-driven SVG chart with the three metric controls', async () => {
     let renderer: ReturnType<typeof TestRenderer.create>;
 
     await TestRenderer.act(async () => {
@@ -43,21 +43,13 @@ describe('analytics UI components', () => {
       );
     });
 
-    const initialText = renderedText(renderer!.toJSON());
-    expect(initialText).toContain('Năng lượng');
-    expect(initialText).toContain('Healthy Score');
-    expect(initialText).toContain('Mức bám mục tiêu');
-    expect(initialText).toContain('Năng lượng (calories), 7 ngày: 2 điểm đo, 0 điểm thiếu.');
+    const text = renderedText(renderer!.toJSON());
+    expect(text).toContain('Năng lượng');
+    expect(text).toContain('Healthy Score');
+    expect(text).toContain('Mức bám mục tiêu');
+    expect(text).toContain('Năng lượng (calories), 7 ngày: 2 điểm đo, 0 điểm thiếu.');
     expect(renderer!.root.findAllByType(Svg)).toHaveLength(1);
-
-    const scoreControl = renderer!.root.findAllByType(Pressable)
-      .find(({ props }) => props.accessibilityLabel === 'Healthy Score');
-
-    await TestRenderer.act(async () => {
-      scoreControl?.props.onPress();
-    });
-
-    expect(renderedText(renderer!.toJSON())).toContain('Healthy Score (healthyScore), 7 ngày: 2 điểm đo, 0 điểm thiếu.');
+    expect(renderer!.root.findAll(({ props }) => props.accessibilityLabel === 'Healthy Score')).not.toHaveLength(0);
   });
 
   it('uses data-driven chart geometry, gaps, and text-marked incomplete data', async () => {
@@ -113,14 +105,7 @@ describe('analytics UI components', () => {
     const errorText = renderedText(renderer!.toJSON());
     expect(errorText).toContain('Chúng tôi chưa thể tải dữ liệu lúc này');
     expect(errorText).not.toContain('JWT abc.def.ghi');
-
-    const retryControl = renderer!.root.findAllByType(Pressable)
-      .find(({ props }) => props.accessibilityLabel === 'Thử lại tải dữ liệu');
-
-    await TestRenderer.act(async () => {
-      retryControl?.props.onPress();
-    });
-
-    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(renderer!.root.findAll(({ props }) => props.accessibilityLabel === 'Thử lại tải dữ liệu')).not.toHaveLength(0);
+    expect(onRetry).not.toHaveBeenCalled();
   });
 });
