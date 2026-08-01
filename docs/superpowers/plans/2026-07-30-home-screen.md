@@ -810,7 +810,7 @@ Expected: FAIL because only two starter tabs exist.
 
 - [ ] **Step 3: Configure `_layout.tsx`**
 
-Keep the existing auth redirect. Import `House`, `ChartNoAxesColumnIncreasing`, `Soup`, and `UserRound`. Render each at `size={23}` and `strokeWidth={2}`.
+Keep the existing auth redirect. Import `House`, `ChartNoAxesColumnIncreasing`, `Soup`, and `UserRound`. Render each at `size={20}` and `strokeWidth={2}` inside a compact `h-7 w-7` (28-by-28-pixel) visual surface.
 
 Use:
 
@@ -825,13 +825,15 @@ screenOptions={{
     borderTopColor: '#E7DDD3',
   },
   tabBarLabelStyle: {
-    fontSize: 12,
+    fontSize: 10,
+    lineHeight: 12,
     fontWeight: '600',
   },
 }}
 ```
 
-The focused icon sits on a small Peach Tint rounded surface; inactive uses a transparent surface. Keep a 44 px icon wrapper and let the navigator manage selected semantics and safe area.
+The focused icon sits on a small Peach Tint rounded surface; inactive uses a transparent surface. The compact visual surface is not the touch target: Expo Router's parent tab button remains at least 44 px, while the navigator manages selected semantics and safe area.
+Set `tabBarLabelPosition: 'below-icon'` so iPhone landscape does not switch to React Navigation's compact horizontal-label mode; this preserves the regular navigator tab height and navigator-managed safe area without changing the 28 px icon visual surface or 44 px tab touch target.
 
 - [ ] **Step 4: Replace Explore and add placeholder routes**
 
@@ -890,7 +892,7 @@ Add focused source-contract assertions:
 ```ts
 expect(homeSource).toContain('useWindowDimensions');
 expect(homeSource).toContain('fontScale');
-expect(homeSource).toContain('useReducedMotion');
+expect(allHomeSources).toContain('useReducedMotion');
 expect(homeSource).toContain('max-w-[520px]');
 expect(allHomeSources).toContain('accessibilityLiveRegion="polite"');
 expect(allHomeSources).toContain('fontVariant');
@@ -969,3 +971,4 @@ git commit -m "test: verify home accessibility states"
 ```
 
 If no production adjustment was needed, commit only meaningful new regression assertions. Do not create an empty commit.
+
