@@ -101,6 +101,8 @@ The form captures:
 
 Mock `POST /api/v1/users/me/custom-foods`. Validate required names, `servingGrams > 0`, and non-negative nutrition values. On success, add the returned custom food to the current draft. The mock service assigns ownership and identifiers; the client does not send an owner ID.
 
+The custom-food screen groups the fields into `Thông tin món ăn` (name, serving name, serving grams) and `Dinh dưỡng cho khẩu phần này` (calories, protein, carbohydrate, fat, fiber, sugar, and sodium). Every nutrient has a visible unit and inline validation. A compact summary lets the user verify that the values belong to the entered serving before submission.
+
 ## AI Image Flow
 
 Use the approved `expo-image-picker` package for both `launchCameraAsync` and `launchImageLibraryAsync`; do not add `expo-camera` for this scope.
@@ -125,7 +127,10 @@ The review screen displays every detected item with:
 - confidence expressed with text as well as a visual cue;
 - mapping state;
 - mapped food or candidates;
-- serving and quantity.
+- serving and quantity;
+- calories, protein, carbohydrate, fat, fiber, sugar, and sodium returned for the current mapping and portion.
+
+The screen also displays the backend-derived nutrition total for the proposed meal. The user must review it before confirmation is enabled. Changing a mapping or portion refreshes this preview through the mock API. Catalog nutrition is corrected through food mapping and portion changes, not arbitrary client-supplied values. If the catalog values do not describe the meal, the user can replace the item with a custom food and enter its nutrition manually.
 
 The user can replace a mapping, change a serving or quantity, omit an incorrect detected item, or add a catalog/custom item. The final state is sent through a mock of `PUT /api/v1/meal-analyses/{analysisId}/review`.
 
