@@ -51,6 +51,76 @@ function requireData<T>(body: unknown, status: number, label: string): T {
   return body.data as T;
 }
 
+function isNullableFiniteNumber(value: unknown): value is number | null {
+  return value === null || (typeof value === 'number' && Number.isFinite(value));
+}
+
+function isDashboardTrendPoint(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.date !== 'string' || value.date.length === 0) return false;
+  const numericFields = ['caloriesKcal', 'proteinG', 'carbohydrateG', 'fatG', 'healthyScore', 'goalAdherence'];
+  return numericFields.every((field) => isNullableFiniteNumber(value[field]))
+    && typeof value.dataCompleteness === 'number'
+    && Number.isFinite(value.dataCompleteness)
+    && value.dataCompleteness >= 0
+    && value.dataCompleteness <= 1;
+}
+
+function requireDashboardTrends(body: unknown, status: number): DashboardTrendsData {
+  const data = requireData<unknown>(body, status, 'dashboard trends');
+  if (!isRecord(data)
+    || typeof data.from !== 'string'
+    || typeof data.to !== 'string'
+    || data.from.length === 0
+    || data.to.length === 0
+    || !Array.isArray(data.points)
+    || !data.points.every(isDashboardTrendPoint)) {
+    throw new AnalyticsApiError('Invalid dashboard trends response', { status, code: 'INVALID_RESPONSE' });
+  }
+  return data as unknown as DashboardTrendsData;
+}
+
+function isTargetItem(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return (value.min === undefined || (typeof value.min === 'number' && Number.isFinite(value.min)))
+    && (value.max === undefined || (typeof value.max === 'number' && Number.isFinite(value.max)));
+}
+
+function isTargets(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return ['caloriesKcal', 'proteinG', 'fiberG', 'sodiumMg'].every((field) => field in value && isTargetItem(value[field]));
+}
+
+function isNutritionSummary(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const fields = ['caloriesKcal', 'proteinG', 'carbohydrateG', 'fatG', 'fiberG', 'sugarG', 'sodiumMg'];
+  return fields.every((field) => field in value && isNullableFiniteNumber(value[field]));
+}
+
+function isDailyRecommendation(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.recommendationCode !== 'string' || typeof value.templateText !== 'string') return false;
+  if (value.llmText !== undefined && value.llmText !== null && typeof value.llmText !== 'string') return false;
+  return value.priority === 'HIGH' || value.priority === 'MEDIUM' || value.priority === 'LOW';
+}
+
+function requireDailyAssessment(body: unknown, status: number): DailyAssessmentData {
+  const data = requireData<unknown>(body, status, 'daily assessment');
+  const statuses = ['READY', 'PENDING', 'FAILED', 'SUPERSEDED'] as const;
+  if (!isRecord(data)
+    || !statuses.includes(data.status as typeof statuses[number])
+    || !isNutritionSummary(data.nutritionSummary)
+    || !isTargets(data.targets)
+    || !Array.isArray(data.recommendations)
+    || !data.recommendations.every(isDailyRecommendation)) {
+    throw new AnalyticsApiError('Invalid daily assessment response', { status, code: 'INVALID_RESPONSE' });
+  }
+  if ('score' in data && !isNullableFiniteNumber(data.score)) {
+    throw new AnalyticsApiError('Invalid daily assessment response', { status, code: 'INVALID_RESPONSE' });
+  }
+  if ('mealCount' in data && (typeof data.mealCount !== 'number' || !Number.isFinite(data.mealCount))) {
+    throw new AnalyticsApiError('Invalid daily assessment response', { status, code: 'INVALID_RESPONSE' });
+  }
+  return data as unknown as DailyAssessmentData;
+}
 function requireWeightHistory(body: unknown, status: number): WeightHistoryResponse {
   if (!isRecord(body)) throwEnvelopeError(body, status, 'weight history');
   const apiError = readApiError(body.error);
@@ -103,11 +173,11 @@ export function createAnalyticsApiClient({ baseUrl, accessToken, fetchImpl = fet
   return {
     async getDailyAssessment(date: string, signal?: AbortSignal) {
       const result = await request(`/api/v1/nutrition-assessments/daily?date=${encodeURIComponent(date)}`, 'daily assessment', signal);
-      return requireData<DailyAssessmentData>(result.body, result.status, 'daily assessment');
+      return requireDailyAssessment(result.body, result.status);
     },
     async getDashboardTrends(from: string, to: string, signal?: AbortSignal) {
       const result = await request(`/api/v1/dashboard/trends?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, 'dashboard trends', signal);
-      return requireData<DashboardTrendsData>(result.body, result.status, 'dashboard trends');
+      return requireDashboardTrends(result.body, result.status);
     },
     async getWeightHistory(from: string, to: string, signal?: AbortSignal) {
       const result = await request(`/api/v1/tracking/weight?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&page=0&size=31`, 'weight history', signal);

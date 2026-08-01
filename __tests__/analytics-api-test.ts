@@ -122,7 +122,7 @@ describe('analytics API client', () => {
 
   it('encodes query values and uses documented daily/weight routes', async () => {
     const fetchMock = jest.fn()
-      .mockResolvedValueOnce(response({ data: {}, error: null }))
+      .mockResolvedValueOnce(response({ data: mockDailyAssessment, error: null }))
       .mockResolvedValueOnce(response(validWeightBody));
     const client = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: fetchMock });
     await client.getDailyAssessment('2026-08-01/unsafe');
@@ -157,6 +157,38 @@ describe('analytics API client', () => {
   });
 
 
+  it('rejects malformed successful dashboard trends payloads', async () => {
+    const invalidClient = createAnalyticsApiClient({
+      baseUrl: 'https://api.example.test',
+      accessToken: 'jwt',
+      fetchImpl: jest.fn().mockResolvedValue(response({
+        data: {
+          from: '2026-07-26',
+          to: '2026-08-01',
+          points: [{ date: '2026-08-01', caloriesKcal: 'not-a-number', dataCompleteness: 1 }],
+        },
+        error: null,
+      })),
+    });
+    await expect(invalidClient.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
+
+  it('rejects malformed successful daily assessment payloads', async () => {
+    const invalidClient = createAnalyticsApiClient({
+      baseUrl: 'https://api.example.test',
+      accessToken: 'jwt',
+      fetchImpl: jest.fn().mockResolvedValue(response({
+        data: {
+          status: 'READY',
+          nutritionSummary: { caloriesKcal: null },
+          targets: {},
+          recommendations: [],
+        },
+        error: null,
+      })),
+    });
+    await expect(invalidClient.getDailyAssessment('2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
   it('rejects invalid weight trend metadata and 2xx error envelopes', async () => {
     const invalidWeightClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: [], meta: { page: 0, size: 31, totalElements: 0, totalPages: 0 }, trend: { latestWeightKg: 67.8, changeFromFirstKg: 0 }, error: null })) });
     await expect(invalidWeightClient.getWeightHistory('2026-07-03', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });

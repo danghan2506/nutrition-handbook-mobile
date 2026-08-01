@@ -11,7 +11,8 @@ const metrics: TrendMetric[] = ['calories', 'healthyScore', 'goalAdherence'];
 export const WeeklyTrendsChart: React.FC<WeeklyTrendsChartProps> = ({ points, periodDays }) => {
   const [metric, setMetric] = useState<TrendMetric>('calories');
   const [width, setWidth] = useState(320);
-  const series = useMemo(() => buildTrendSeries(points, metric, Math.max(width - 32, 1), 150), [points, metric, width]);
+  const chartPeriodDays: 7 | 30 = periodDays ?? (points.length > 7 ? 30 : 7);
+  const series = useMemo(() => buildTrendSeries(points, metric, Math.max(width - 32, 1), 150, chartPeriodDays), [points, metric, width, chartPeriodDays]);
   const config = getTrendMetricConfig(metric);
   const chartHeight = 180;
 

@@ -103,6 +103,16 @@ describe('analytics chart model', () => {
     expect(buildTrendSeries(month, 'calories', 300, 100).xAxisLabels).toHaveLength(6);
   });
 
+  it('preserves an explicit 30-day period for sparse trend points', () => {
+    const sparsePoints = Array.from({ length: 5 }, (_, index) =>
+      point(`2026-07-${String(index + 1).padStart(2, '0')}`),
+    );
+    const series = buildTrendSeries(sparsePoints, 'calories', 300, 100, 30);
+
+    expect(series.periodDays).toBe(30);
+    expect(series.xAxisLabels).toHaveLength(5);
+    expect(series.accessibilitySummary).toContain('30 ngày');
+  });
   it.each([
     [-0.7, 'Giảm 0,7 kg trong 7 ngày qua'],
     [0, 'Không đổi trong 7 ngày qua'],

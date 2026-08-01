@@ -157,6 +157,7 @@ export function buildTrendSeries(
   metric: TrendMetric,
   width: number,
   height: number,
+  requestedPeriodDays?: 7 | 30,
 ): TrendSeries {
   const safeWidth = getSafeDimension(width);
   const safeHeight = getSafeDimension(height);
@@ -177,7 +178,7 @@ export function buildTrendSeries(
       y: value === null ? null : safeHeight - ((value - domain.min) / domainSpan) * safeHeight,
     };
   });
-  const periodDays: 7 | 30 = inputPoints.length > 7 ? 30 : 7;
+  const periodDays: 7 | 30 = requestedPeriodDays ?? (inputPoints.length > 7 ? 30 : 7);
   const config = getTrendMetricConfig(metric);
   const missingCount = inputPoints.length - measuredValues.length;
 
