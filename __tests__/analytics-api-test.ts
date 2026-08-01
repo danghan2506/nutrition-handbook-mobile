@@ -1,3 +1,4 @@
+import { ApiEnvelope, DashboardTrendsData, NutritionSummary } from '@/types/analytics';
 import {
   mockDailyAssessment,
   mockTrendPoints,
@@ -16,9 +17,15 @@ describe('analytics API fixtures', () => {
   });
 
   it('accepts a nullable data error envelope', () => {
-    const envelope = { data: null, error: { code: 'UNAVAILABLE', message: 'Unavailable', fieldErrors: [], correlationId: null } };
+    const envelope: ApiEnvelope<DashboardTrendsData> = { data: null, error: { code: 'UNAVAILABLE', message: 'Unavailable', fieldErrors: [], correlationId: null } };
     expect(envelope.data).toBeNull();
-    expect(envelope.error.code).toBe('UNAVAILABLE');
+    expect(envelope.error?.code).toBe('UNAVAILABLE');
+  });
+
+  it('keeps the daily nutrition summary object while allowing unknown nutrients', () => {
+    const summary: NutritionSummary = { caloriesKcal: null, proteinG: null, carbohydrateG: null, fatG: null, fiberG: null, sugarG: null, sodiumMg: null };
+    expect(summary.caloriesKcal).toBeNull();
+    expect(mockDailyAssessment.nutritionSummary).toBeDefined();
   });
 
   it('uses only the documented trend-point fields for measured days', () => {
