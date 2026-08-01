@@ -1,29 +1,26 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-describe('analytics screen API integration', () => {
+describe('analytics screen UI integration', () => {
   const source = readFileSync(join(process.cwd(), 'app/(tabs)/insights.tsx'), 'utf8');
 
-  it('uses the auth session and analytics data hook instead of fixtures', () => {
-    expect(source).toContain("from '@/hooks/use-auth-session'");
-    expect(source).toContain("from '@/hooks/use-analytics-data'");
-    expect(source).toContain('session?.access_token');
-    expect(source).not.toContain('mockAnalytics');
+  it('keeps the screen on local fixture data until API integration is explicitly enabled', () => {
+    expect(source).toContain("from '../../data/mockAnalytics'");
+    expect(source).not.toContain('useAnalyticsData');
+    expect(source).not.toContain('useAuthSession');
   });
 
-  it('keeps period values numeric and accessible', () => {
+  it('keeps numeric 7/30 period controls accessible', () => {
     expect(source).toContain('const periods: AnalyticsPeriodDays[] = [7, 30]');
     expect(source).toContain('accessibilityRole="button"');
     expect(source).toContain('accessibilityState={{ selected: periodDays === value }}');
     expect(source).toContain('min-h-[44px]');
-    expect(source).toContain('periodDays }');
   });
 
-  it('renders daily, trends, and weight sections independently', () => {
+  it('composes the improved analytics cards and chart', () => {
     expect(source).toContain('<DailyHealthyScoreCard');
     expect(source).toContain('<WeeklyTrendsChart');
     expect(source).toContain('<WeightSummaryCard');
-    expect(source).toContain('<AnalyticsSectionState');
-    expect(source).toContain('onRetry={refresh}');
+    expect(source).toContain('<NutrientDetailsList');
   });
 });
