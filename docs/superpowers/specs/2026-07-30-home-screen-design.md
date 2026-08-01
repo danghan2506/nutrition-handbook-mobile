@@ -365,7 +365,8 @@ profile.tsx  → Bạn
 `profile.tsx` as focused placeholders.
 
 Use the already-installed `lucide-react-native` icons with a consistent
-23-pixel size and medium stroke:
+20-pixel size with a medium stroke. Each icon sits inside a compact 28-by-28-pixel
+(`h-7 w-7`) visual surface:
 
 - `House` for Hôm nay.
 - `ChartNoAxesColumnIncreasing` for Phân tích.
@@ -376,13 +377,15 @@ Tab visual states:
 
 - Active icon: Apricot Action.
 - Active indicator: small Peach Tint surface.
-- Active label: Apricot-aligned dark text with increased weight.
+- Active label: Apricot-aligned dark text with increased weight, 10-pixel type,
+  and a 12-pixel line height.
 - Inactive icon and label: Soft Slate.
 - Tab background: Clean Surface.
 - Top divider: Quiet Dot.
 
-Maintain at least a 44-pixel touch target and let the navigator account for the
-bottom safe area. Continue using the existing `HapticTab` behavior.
+The compact visual surface is not the touch target: Expo Router's parent tab
+button remains at least 44 pixels, and the navigator manages the bottom safe
+area. Continue using the existing `HapticTab` behavior.
 
 Placeholder tabs use calm, explicit copy and no fake data:
 
