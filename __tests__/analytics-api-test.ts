@@ -104,35 +104,64 @@ describe('analytics API client', () => {
     json: jest.fn().mockResolvedValue(body),
   }) as unknown as Response;
 
+  const validWeightBody = {
+    data: [],
+    meta: { page: 0, size: 31, totalElements: 0, totalPages: 0 },
+    trend: { latestWeightKg: 67.8, changeFromFirstKg: -0.7, firstOccurredAt: '2026-07-01T07:00:00+07:00' },
+    error: null,
+  };
+
   it('builds authenticated trend URL with documented headers', async () => {
     const fetchMock = jest.fn().mockResolvedValue(response({ data: { from: '2026-07-26', to: '2026-08-01', points: [] }, error: null }));
-    await createAnalyticsApiClient({ baseUrl: 'https://api.example.test///', accessToken: 'test-jwt', fetchImpl: fetchMock })
-      .getDashboardTrends('2026-07-26', '2026-08-01');
+    await createAnalyticsApiClient({ baseUrl: 'https://api.example.test///', accessToken: 'test-jwt', fetchImpl: fetchMock }).getDashboardTrends('2026-07-26', '2026-08-01');
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/v1/dashboard/trends?from=2026-07-26&to=2026-08-01',
-      expect.objectContaining({ method: 'GET', headers: { Accept: 'application/json', Authorization: 'Bearer test-jwt' } }),
+      { method: 'GET', headers: { Accept: 'application/json', Authorization: 'Bearer test-jwt' }, signal: undefined },
     );
   });
 
-  it('calls daily and weight routes with encoded params and page size 31', async () => {
-    const fetchMock = jest.fn().mockResolvedValue(response({ data: {}, error: null }));
+  it('encodes query values and uses documented daily/weight routes', async () => {
+    const fetchMock = jest.fn()
+      .mockResolvedValueOnce(response({ data: {}, error: null }))
+      .mockResolvedValueOnce(response(validWeightBody));
     const client = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: fetchMock });
-    await client.getDailyAssessment('2026-08-01');
-    await client.getWeightHistory('2026-07-03', '2026-08-01');
-    expect(fetchMock.mock.calls[0][0]).toContain('/api/v1/nutrition-assessments/daily?date=2026-08-01');
-    expect(fetchMock.mock.calls[1][0]).toContain('/api/v1/tracking/weight?from=2026-07-03&to=2026-08-01&page=0&size=31');
+    await client.getDailyAssessment('2026-08-01/unsafe');
+    const weight = await client.getWeightHistory('2026-07-03', '2026-08-01');
+    expect(weight.meta.size).toBe(31);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.example.test/api/v1/nutrition-assessments/daily?date=2026-08-01%2Funsafe');
+    expect(fetchMock.mock.calls[1][0]).toBe('https://api.example.test/api/v1/tracking/weight?from=2026-07-03&to=2026-08-01&page=0&size=31');
   });
 
-  it('surfaces API error metadata and invalid JSON', async () => {
-    const errorClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: null, error: { code: 'UNAUTHORIZED', message: 'Not allowed', fieldErrors: [], correlationId: 'corr-1' } }, 401, false)) });
+  it('surfaces 401 and 503 API error metadata', async () => {
+    const body = { data: null, error: { code: 'UNAUTHORIZED', message: 'Not allowed', fieldErrors: [], correlationId: 'corr-1' } };
+    const errorClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response(body, 401, false)) });
     await expect(errorClient.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toMatchObject({ status: 401, code: 'UNAUTHORIZED', correlationId: 'corr-1' });
+    const unavailableClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: null, error: { code: 'DEPENDENCY_UNAVAILABLE', message: 'Try later', fieldErrors: [], correlationId: null } }, 503, false)) });
+    await expect(unavailableClient.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toMatchObject({ status: 503, code: 'DEPENDENCY_UNAVAILABLE' });
+  });
+
+  it('rejects malformed JSON and missing data', async () => {
     const invalidClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue({ ok: true, status: 200, json: jest.fn().mockRejectedValue(new Error('bad json')) } as unknown as Response) });
     await expect(invalidClient.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toBeInstanceOf(AnalyticsApiError);
+    const missingClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ error: null })) });
+    await expect(missingClient.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
   });
 
-  it('preserves abort identity', async () => {
+  it('validates and returns the complete weight envelope', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(response(validWeightBody));
+    const client = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: fetchMock });
+    const result = await client.getWeightHistory('2026-07-03', '2026-08-01');
+    expect(result).toEqual(validWeightBody);
+    const invalidClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: {}, meta: {}, trend: {}, error: null })) });
+    await expect(invalidClient.getWeightHistory('2026-07-03', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
+
+  it('preserves abort identity and forwards AbortSignal', async () => {
     const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' });
-    const client = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockRejectedValue(abortError) });
-    await expect(client.getDashboardTrends('2026-07-26', '2026-08-01')).rejects.toMatchObject({ name: 'AbortError' });
+    const fetchMock = jest.fn().mockRejectedValue(abortError);
+    const client = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: fetchMock });
+    const controller = new AbortController();
+    await expect(client.getDashboardTrends('2026-07-26', '2026-08-01', controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock.mock.calls[0][1].signal).toBe(controller.signal);
   });
 });
