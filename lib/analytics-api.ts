@@ -43,6 +43,8 @@ function throwEnvelopeError(body: unknown, status: number, label: string): never
 
 function requireData<T>(body: unknown, status: number, label: string): T {
   if (!isRecord(body)) throwEnvelopeError(body, status, label);
+  const apiError = readApiError(body.error);
+  if (apiError) throw new AnalyticsApiError(apiError.message, { status, code: apiError.code, correlationId: apiError.correlationId });
   if (!("data" in body) || body.data === null || body.data === undefined) {
     throw new AnalyticsApiError(`Missing data in ${label} response`, { status, code: 'INVALID_RESPONSE' });
   }
@@ -58,7 +60,8 @@ function requireWeightHistory(body: unknown, status: number): WeightHistoryRespo
   if (!Array.isArray(body.data) || !isRecord(meta) || !isRecord(trend)
     || typeof meta.page !== 'number' || typeof meta.size !== 'number'
     || typeof meta.totalElements !== 'number' || typeof meta.totalPages !== 'number'
-    || typeof trend.latestWeightKg !== 'number' || typeof trend.changeFromFirstKg !== 'number') {
+    || typeof trend.latestWeightKg !== 'number' || typeof trend.changeFromFirstKg !== 'number'
+    || !(trend.firstOccurredAt === null || typeof trend.firstOccurredAt === 'string')) {
     throw new AnalyticsApiError('Invalid weight history response', { status, code: 'INVALID_RESPONSE' });
   }
   return {

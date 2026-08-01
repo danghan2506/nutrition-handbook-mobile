@@ -156,6 +156,13 @@ describe('analytics API client', () => {
     await expect(invalidClient.getWeightHistory('2026-07-03', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
   });
 
+
+  it('rejects invalid weight trend metadata and 2xx error envelopes', async () => {
+    const invalidWeightClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: [], meta: { page: 0, size: 31, totalElements: 0, totalPages: 0 }, trend: { latestWeightKg: 67.8, changeFromFirstKg: 0 }, error: null })) });
+    await expect(invalidWeightClient.getWeightHistory('2026-07-03', '2026-08-01')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+    const errorClient = createAnalyticsApiClient({ baseUrl: 'https://api.example.test', accessToken: 'jwt', fetchImpl: jest.fn().mockResolvedValue(response({ data: {}, error: { code: 'CONTRACT_ERROR', message: 'Invalid contract', fieldErrors: [], correlationId: null } })) });
+    await expect(errorClient.getDashboardTrends('2026-07-03', '2026-08-01')).rejects.toMatchObject({ code: 'CONTRACT_ERROR' });
+  });
   it('preserves abort identity and forwards AbortSignal', async () => {
     const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' });
     const fetchMock = jest.fn().mockRejectedValue(abortError);
