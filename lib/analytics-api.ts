@@ -66,8 +66,8 @@ function requireWeightHistory(body: unknown, status: number): WeightHistoryRespo
   }
   return {
     data: body.data as WeightHistoryResponse['data'],
-    meta: meta as WeightHistoryResponse['meta'],
-    trend: trend as WeightHistoryResponse['trend'],
+    meta: meta as unknown as WeightHistoryResponse['meta'],
+    trend: trend as unknown as WeightHistoryResponse['trend'],
     error: null,
   };
 }

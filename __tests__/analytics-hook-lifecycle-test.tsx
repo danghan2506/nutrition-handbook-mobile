@@ -58,29 +58,29 @@ describe('useAnalyticsData lifecycle', () => {
       .mockResolvedValueOnce(successfulResponseFor('tracking/weight'))
       .mockImplementation((url: string) => Promise.resolve(successfulResponseFor(url)));
     global.fetch = fetchMock as typeof fetch;
-    let latest: AnalyticsData | null = null;
+    const latestRef: { current: AnalyticsData | null } = { current: null };
 
     await TestRenderer.act(async () => {
       TestRenderer.create(
-        <AnalyticsHarness accessToken="token" periodDays={7} onUpdate={(data) => { latest = data; }} />,
+        <AnalyticsHarness accessToken="token" periodDays={7} onUpdate={(data) => { latestRef.current = data; }} />,
       );
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(latest?.daily).toEqual({
+    expect(latestRef.current?.daily).toEqual({
       status: 'error',
       data: null,
       message: 'Your session has ended. Please sign in again.',
     });
 
     await TestRenderer.act(async () => {
-      latest?.refresh();
+      latestRef.current?.refresh();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(latest?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
+    expect(latestRef.current?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
   });
 
   it('ignores an older request after the period changes', async () => {
@@ -96,25 +96,25 @@ describe('useAnalyticsData lifecycle', () => {
       oldRequests.shift() ?? Promise.resolve(successfulResponseFor(url)),
     );
     global.fetch = fetchMock as typeof fetch;
-    let latest: AnalyticsData | null = null;
+    const latestRef: { current: AnalyticsData | null } = { current: null };
     let renderer: ReturnType<typeof TestRenderer.create>;
 
     await TestRenderer.act(async () => {
       renderer = TestRenderer.create(
-        <AnalyticsHarness accessToken="token" periodDays={7} onUpdate={(data) => { latest = data; }} />,
+        <AnalyticsHarness accessToken="token" periodDays={7} onUpdate={(data) => { latestRef.current = data; }} />,
       );
       await Promise.resolve();
     });
 
     await TestRenderer.act(async () => {
       renderer!.update(
-        <AnalyticsHarness accessToken="token" periodDays={30} onUpdate={(data) => { latest = data; }} />,
+        <AnalyticsHarness accessToken="token" periodDays={30} onUpdate={(data) => { latestRef.current = data; }} />,
       );
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(latest?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
+    expect(latestRef.current?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
 
     await TestRenderer.act(async () => {
       resolveOldDaily!(response({ data: { ...mockDailyAssessment, assessmentId: 'old-load' }, error: null }));
@@ -124,6 +124,6 @@ describe('useAnalyticsData lifecycle', () => {
       await Promise.resolve();
     });
 
-    expect(latest?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
+    expect(latestRef.current?.daily).toEqual({ status: 'success', data: mockDailyAssessment });
   });
 });
