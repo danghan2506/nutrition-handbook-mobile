@@ -58,7 +58,7 @@ const MetricRow: React.FC<MetricRowProps> = ({
       <View className="h-2.5 bg-[#F0EAE1] rounded-full overflow-hidden">
         {hasActual && denominator !== null && (
           <View
-            style={{ width: progress + '%' }}
+            style={{ width: (progress + '%') as `${number}%` }}
             className={'h-full rounded-full ' + fillClassName}
           />
         )}
@@ -128,7 +128,7 @@ export const NutrientDetailsList: React.FC<NutrientDetailsListProps> = ({
             <View
               style={{
                 width:
-                  Math.min(Math.max((nutritionSummary.sodiumMg / targets.sodiumMg.max) * 100, 0), 100) + '%',
+                  (Math.min(Math.max((nutritionSummary.sodiumMg / targets.sodiumMg.max) * 100, 0), 100) + '%') as `${number}%`,
               }}
               className={'h-full rounded-full ' + (isSodiumExceeded ? 'bg-[#FF8B78]' : 'bg-[#A9D7F5]')}
             />

@@ -137,7 +137,8 @@ describe('analytics cards', () => {
     expect(overviewTab.props.accessibilityRole).toBe('tab');
     expect(overviewTab.props.accessibilityState).toEqual({ selected: true });
     expect(String(overviewTab.props.className)).toContain('min-h-[44px]');
-    detailsTab.props.onPress();
+    const onPress = detailsTab.props.onPress as (() => void) | undefined;
+    onPress?.();
     expect(onSelectTab).toHaveBeenCalledWith('details');
   });
 });
