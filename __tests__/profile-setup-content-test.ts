@@ -1,7 +1,80 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('profile setup content', () => {
+  it('implements accessible, focusable activity radio cards with selected details', () => {
+    const sourcePath = join(
+      process.cwd(),
+      'components',
+      'profile',
+      'activity-level-select.tsx',
+    );
+
+    expect(existsSync(sourcePath)).toBe(true);
+    if (!existsSync(sourcePath)) {
+      return;
+    }
+
+    const source = readFileSync(sourcePath, 'utf8');
+    const imageSource = readFileSync(
+      join(process.cwd(), 'constants', 'images.ts'),
+      'utf8',
+    );
+
+    expect(source).toContain('accessibilityRole="radio"');
+    expect(source).toContain('checked: isSelected');
+    expect(source).toContain('disabled,');
+    expect(imageSource).toContain('airline_seat_recline_normal.svg');
+    expect(imageSource).toContain('directions_walk.svg');
+    expect(imageSource).toContain('sports_gymnastics.svg');
+    expect(imageSource).toContain('directions_run.svg');
+    expect(source).toContain('@/constants/images');
+    expect(source).not.toContain('../../assets/icons');
+    expect(source).toContain('isSelected ? (');
+    expect(source).toContain('option.details.map');
+    expect(source).toContain('export type ActivityLevelSelectHandle');
+    expect(source).toMatch(/forwardRef<\s*ActivityLevelSelectHandle/);
+    expect(source).toContain('useImperativeHandle');
+    expect(source).toContain('findNodeHandle');
+    expect(source).toContain('AccessibilityInfo.setAccessibilityFocus');
+    expect(source).toContain('optionRefs.current[value]');
+    expect(source).toContain('optionRefs.current.sedentary');
+    expect(source).toContain('[value]');
+    expect(source).toContain('expanded: isSelected');
+    expect(source).toContain('accessibilityLabel={option.details.join');
+    expect(source).toContain('text-[15px] font-extrabold text-ink-navy');
+  });
+
+  it('implements an accessible single-choice nutrition-goal card list', () => {
+    const sourcePath = join(
+      process.cwd(),
+      'components',
+      'profile',
+      'nutrition-goal-select.tsx',
+    );
+
+    expect(existsSync(sourcePath)).toBe(true);
+    if (!existsSync(sourcePath)) {
+      return;
+    }
+
+    const source = readFileSync(sourcePath, 'utf8');
+
+    expect(source).toContain('NUTRITION_GOAL_OPTIONS.map');
+    expect(source).toContain('accessibilityRole="radiogroup"');
+    expect(source).toContain('accessibilityRole="radio"');
+    expect(source).toContain('checked: isSelected');
+    expect(source).toContain(
+      'accessibilityLabel={`${option.label}. ${option.description}`}',
+    );
+    expect(source).toContain('onPress={() => onChange(option.value)}');
+    expect(source).toContain('export type NutritionGoalSelectHandle');
+    expect(source).toMatch(/forwardRef<\s*NutritionGoalSelectHandle/);
+    expect(source).toContain('AccessibilityInfo.setAccessibilityFocus');
+    expect(source).toContain('optionRefs.current.HEALTHY_EATING');
+    expect(source).toContain('✓');
+    expect(source).toContain('accessibilityLiveRegion="polite"');
+  });
   it('defines the approved gender combo box and progress accessibility', () => {
     const root = process.cwd();
     const constants = readFileSync(join(root, 'constants', 'profile.ts'), 'utf8');
@@ -54,7 +127,7 @@ describe('profile setup content', () => {
     expect(source).not.toContain('Có thể điều chỉnh');
   });
 
-  it('composes exactly three local-state steps without nickname or persistence', () => {
+  it('composes exactly five local-state steps without nickname or persistence', () => {
     const source = readFileSync(
       join(process.cwd(), 'app', 'profile-setup.tsx'),
       'utf8',
@@ -70,6 +143,32 @@ describe('profile setup content', () => {
     expect(source).toContain('<GenderSelect');
     expect(source).toContain('<HeightRuler');
     expect(source).toContain("router.replace('/(tabs)')");
+    expect(source).toContain('PROFILE_STEP_COUNT');
+    expect(source).not.toContain('trên 3');
+    expect(source).toContain('step === 3');
+    expect(source).toContain('<ActivityLevelSelect');
+    expect(source).toContain('value={draft.activityLevel}');
+    expect(source).toContain("changeStep(3, 'forward')");
+    expect(source).toContain('profileCopy.activityNote');
+    expect(source).toContain('profileCopy.activityRequired');
+    expect(source).toContain(
+      'disabled={transitionPending || !draft.activityLevel}',
+    );
+    expect(source).toContain('step === 4');
+    expect(source).toContain('<NutritionGoalSelect');
+    expect(source).toContain('value={draft.goalType}');
+    expect(source).toContain("changeStep(4, 'forward')");
+    expect(source).toContain('profileCopy.goalRequired');
+    expect(source).toContain('nutritionGoalSelectRef.current?.focus()');
+    expect(source).toContain('ref={nutritionGoalSelectRef}');
+    expect(source).toContain(
+      'setDraft((current) => ({ ...current, goalType }))',
+    );
+    expect(source).toContain(
+      'disabled={transitionPending || !draft.goalType}',
+    );
+    expect(source).toContain('label={profileCopy.continue}');
+    expect(source).toContain('label={profileCopy.finish}');
     expect(source).toContain('useReducedMotion');
     expect(source).not.toContain('nickname');
     expect(source).not.toContain('AsyncStorage');
@@ -92,7 +191,7 @@ describe('profile setup content', () => {
     expect(profile).toContain(
       'createInteractionLock(setTransitionPending)',
     );
-    expect(guardedActions).toHaveLength(4);
+    expect(guardedActions).toHaveLength(6);
     expect(profile).toContain(
       'const transitionDuration = reduceMotion ? 160 : 220',
     );
@@ -128,6 +227,12 @@ describe('profile setup content', () => {
     expect(profile).toContain('nextErrors.weight,');
     expect(profile).toContain('heightRulerRef.current?.focus()');
     expect(profile).toContain('ref={heightRulerRef}');
+    expect(profile).toContain('activityLevelSelectRef.current?.focus()');
+    expect(profile).toContain('ref={activityLevelSelectRef}');
+    expect(profile).toContain(
+      'setDraft((current) => ({ ...current, activityLevel }))',
+    );
+    expect(profile).toContain('errors.activity');
     expect(profile).toContain('accessibilityLiveRegion="polite"');
     expect(gender).toContain('accessibilityLiveRegion="polite"');
     expect(ruler).toContain('export type HeightRulerHandle');

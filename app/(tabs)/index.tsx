@@ -1,19 +1,103 @@
-import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useMealsStore } from '@/store/use-meals-store';
+import { useEffect, useMemo, useState } from 'react';
 
-const colors = { canvas: '#FFF9F0', surface: '#FFFFFF', ink: '#2F3542', slate: '#697386', apricot: '#FF9E7A', peach: '#FFF0E7', sky: '#A9D7F5' };
+import { DailyNutritionSummary } from '@/components/home/daily-nutrition-summary';
+import {
+  HomeEmptyState,
+  HomeErrorState,
+  HomeLoadingState,
+} from '@/components/home/home-placeholder-state';
+import { MealSummaryList } from '@/components/home/meal-summary-list';
+import { RecommendationBanner } from '@/components/home/recommendation-banner';
+import { TodayHeader } from '@/components/home/today-header';
+import { WeekDatePicker } from '@/components/home/week-date-picker';
+import { ScrollView, View } from '@/components/ui/tw';
+import {
+  dashboardDataSource,
+  DASHBOARD_MOCK_TIMEZONE,
+} from '@/data/dashboard-mock';
+import { getBusinessDate, getCalendarWeek } from '@/lib/dashboard-date';
+import {
+  createHomeDashboardRequestController,
+  type HomeDashboardState,
+} from '@/lib/home-dashboard-request';
+import { HOME_CONTENT_LAYOUT } from '@/lib/week-date-picker-layout';
 
 export default function HomeScreen() {
-  const date = new Date().toISOString().slice(0, 10);
-  const { meals, loadMeals } = useMealsStore();
-  useEffect(() => { void loadMeals(date); }, [date, loadMeals]);
-  const consumed = meals.reduce((sum, meal) => sum + meal.nutritionSummary.caloriesKcal, 0);
-  const target = 2000;
-  const progress = Math.min(consumed / target, 1);
-  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content}><Text style={styles.eyebrow}>AURALE · HÔM NAY</Text><Text style={styles.title}>Chào bạn, hôm nay mình ăn gì?</Text><View style={styles.calorieCard}><View style={styles.calorieTop}><View><Text style={styles.cardLabel}>Mục tiêu năng lượng</Text><Text style={styles.calorieValue}>{Math.round(consumed)} <Text style={styles.calorieUnit}>/ {target} kcal</Text></Text></View><View style={styles.ring}><Text style={styles.ringValue}>{Math.round(progress * 100)}%</Text></View></View><View style={styles.track}><View style={[styles.fill, { width: `${Math.max(progress * 100, 2)}%` }]} /></View><Text style={styles.cardHint}>{consumed === 0 ? 'Ghi lại bữa đầu tiên để cập nhật mục tiêu.' : `Còn khoảng ${Math.max(target - Math.round(consumed), 0)} kcal trong mục tiêu hôm nay.`}</Text></View><View style={styles.sectionRow}><Text style={styles.sectionTitle}>Bữa ăn hôm nay</Text><Pressable onPress={() => router.push('/meals' as never)}><Text style={styles.link}>Xem nhật ký</Text></Pressable></View>{meals.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Một khoảng trống nhỏ</Text><Text style={styles.emptyText}>Khi sẵn sàng, ghi lại bữa ăn để mình cùng bạn nhìn rõ hơn về ngày hôm nay.</Text><Pressable onPress={() => router.push('/meals' as never)} style={styles.primary}><Text style={styles.primaryText}>Ghi bữa ăn</Text></Pressable></View> : meals.map((meal) => <View key={meal.mealId} style={styles.meal}><Text style={styles.mealType}>{meal.mealType}</Text><Text style={styles.mealFoods}>{meal.items.map((item) => item.foodName).join(', ')}</Text><Text style={styles.mealKcal}>{Math.round(meal.nutritionSummary.caloriesKcal)} kcal</Text></View>)}</ScrollView></SafeAreaView>;
-}
+  const today = useMemo(
+    () => getBusinessDate(new Date(), DASHBOARD_MOCK_TIMEZONE),
+    [],
+  );
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [state, setState] = useState<HomeDashboardState>({
+    status: 'loading',
+    date: today,
+  });
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const requestController = useMemo(
+    () => createHomeDashboardRequestController(setState),
+    [],
+  );
+  const week = useMemo(() => getCalendarWeek(selectedDate), [selectedDate]);
+  const isCurrentState = state.date === selectedDate;
 
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.canvas }, content: { padding: 22, paddingBottom: 40 }, eyebrow: { color: colors.slate, fontSize: 11, letterSpacing: 1.1, fontWeight: '700' }, title: { color: colors.ink, fontSize: 30, lineHeight: 37, fontWeight: '700', marginTop: 8, maxWidth: 330 }, calorieCard: { backgroundColor: colors.surface, borderRadius: 22, padding: 20, marginTop: 24 }, calorieTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, cardLabel: { color: colors.slate, fontSize: 14 }, calorieValue: { color: colors.ink, fontSize: 31, fontWeight: '700', marginTop: 7 }, calorieUnit: { color: colors.slate, fontSize: 15, fontWeight: '500' }, ring: { width: 62, height: 62, borderRadius: 31, borderWidth: 7, borderColor: colors.sky, alignItems: 'center', justifyContent: 'center' }, ringValue: { color: colors.ink, fontSize: 13, fontWeight: '700' }, track: { height: 10, borderRadius: 5, backgroundColor: '#EEF3F5', marginTop: 20, overflow: 'hidden' }, fill: { height: 10, backgroundColor: colors.apricot, borderRadius: 5 }, cardHint: { color: colors.slate, fontSize: 13, marginTop: 12 }, sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 30, marginBottom: 12 }, sectionTitle: { color: colors.ink, fontSize: 20, fontWeight: '700' }, link: { color: colors.ink, fontSize: 14, fontWeight: '700' }, empty: { backgroundColor: colors.peach, borderRadius: 20, padding: 22 }, emptyTitle: { color: colors.ink, fontSize: 17, fontWeight: '700' }, emptyText: { color: colors.slate, fontSize: 14, lineHeight: 21, marginTop: 7 }, primary: { backgroundColor: colors.apricot, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 }, primaryText: { color: colors.ink, fontSize: 16, fontWeight: '700' }, meal: { backgroundColor: colors.surface, borderRadius: 17, padding: 16, marginBottom: 10 }, mealType: { color: colors.slate, fontSize: 12, fontWeight: '700' }, mealFoods: { color: colors.ink, fontSize: 16, fontWeight: '600', marginTop: 5 }, mealKcal: { color: colors.slate, fontSize: 13, marginTop: 7 } });
+  function handleSelectDate(date: string) {
+    if (date === selectedDate) return;
+
+    requestController.invalidate();
+    setState({ status: 'loading', date });
+    setSelectedDate(date);
+  }
+
+  function handleRetry() {
+    requestController.invalidate();
+    setState({ status: 'loading', date: selectedDate });
+    setReloadVersion((version) => version + 1);
+  }
+
+  useEffect(() => {
+    return requestController.request(
+      selectedDate,
+      () => dashboardDataSource.getDashboard(selectedDate),
+    );
+  }, [requestController, reloadVersion, selectedDate]);
+
+  return (
+    <ScrollView
+      className="flex-1 bg-paper"
+      contentContainerClassName="px-5 pb-28 pt-6"
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}>
+      <View
+        className={`mx-auto w-full gap-6 ${HOME_CONTENT_LAYOUT.maxWidthClassName}`}>
+        <TodayHeader
+          selectedDate={selectedDate}
+          today={today}
+          onReturnToToday={() => handleSelectDate(today)}
+        />
+        <WeekDatePicker
+          days={week}
+          selectedDate={selectedDate}
+          today={today}
+          onSelectDate={handleSelectDate}
+        />
+
+        {isCurrentState && state.status === 'loading' ? <HomeLoadingState /> : null}
+        {isCurrentState && state.status === 'empty' ? <HomeEmptyState /> : null}
+        {isCurrentState && state.status === 'error' ? (
+          <HomeErrorState onRetry={handleRetry} />
+        ) : null}
+        {isCurrentState && state.status === 'ready' ? (
+          <>
+            <DailyNutritionSummary
+              nutritionTotals={state.data.nutritionTotals}
+              targets={state.data.targets}
+              dailyAssessment={state.data.dailyAssessment}
+            />
+            <RecommendationBanner recommendation={state.data.topRecommendations[0]} />
+            <MealSummaryList meals={state.data.meals} timezone={state.data.timezone} />
+          </>
+        ) : null}
+      </View>
+    </ScrollView>
+  );
+}

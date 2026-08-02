@@ -1,15 +1,36 @@
 import { Redirect, Tabs, type Href } from 'expo-router';
+import {
+  ChartNoAxesColumnIncreasing,
+  House,
+  Soup,
+  UserRound,
+} from 'lucide-react-native';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { View } from '@/components/ui/tw';
 import { useAuthSession } from '@/hooks/use-auth-session';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+function TabIcon({
+  color,
+  focused,
+  Icon,
+}: {
+  color: string;
+  focused: boolean;
+  Icon: typeof House;
+}) {
+  return (
+    <View
+      className={`h-7 w-7 items-center justify-center rounded-xl ${
+        focused ? 'bg-[#FFF0E7]' : 'bg-transparent'
+      }`}>
+      <Icon color={color} size={20} strokeWidth={2} />
+    </View>
+  );
+}
 
+export default function TabLayout() {
   const { isLoading, session } = useAuthSession();
 
   if (isLoading) {
@@ -23,37 +44,57 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
+        tabBarLabelPosition: 'below-icon',
         tabBarButton: HapticTab,
+        tabBarActiveTintColor: '#FF9E7A',
+        tabBarInactiveTintColor: '#697386',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E7DDD3',
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          lineHeight: 12,
+          fontWeight: '600',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Hôm nay',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon color={color} focused={focused} Icon={House} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="insights"
-        options={{
-          title: 'Phân Tích',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
+          title: 'Phân tích',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon color={color} focused={focused} Icon={ChartNoAxesColumnIncreasing} />
+          ),
         }}
       />
       <Tabs.Screen
         name="meals"
         options={{
           title: 'Bữa ăn',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="fork.knife" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon color={color} focused={focused} Icon={Soup} />
+          ),
         }}
-      />    </Tabs>
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Bạn',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon color={color} focused={focused} Icon={UserRound} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
