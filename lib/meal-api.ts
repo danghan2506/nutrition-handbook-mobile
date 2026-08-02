@@ -32,6 +32,7 @@ const add = (a: Nutrients, b: Nutrients): Nutrients => ({
 export class MockMealApi implements MealApi {
   private readonly latencyMs: number;
   private readonly meals = new Map<string, Meal>();
+  private readonly customFoods = new Map<string, CustomFood>();
   private readonly analyses = new Map<string, MealAnalysis>();
   private readonly idempotent = new Map<string, unknown>();
 
@@ -63,7 +64,7 @@ export class MockMealApi implements MealApi {
   async createCustomFood(input: CustomFoodInput): Promise<ApiEnvelope<CustomFood>> {
     await this.wait();
     const now = new Date().toISOString();
-    return ok({ ...clone(input), customFoodId: `custom-${Date.now()}`, createdAt: now, updatedAt: now });
+    const customFood = { ...clone(input), customFoodId: `custom-${Date.now()}`, createdAt: now, updatedAt: now }; this.customFoods.set(customFood.customFoodId, customFood); return ok(customFood);
   }
 
   async createMeal(input: CreateMealInput, idempotencyKey: string): Promise<ApiEnvelope<Meal>> {
@@ -72,9 +73,10 @@ export class MockMealApi implements MealApi {
     if (existing) return clone(existing);
     const items = input.items.map((item, index) => {
       const food = item.foodId ? mockCatalogFoods.find((candidate) => candidate.foodId === item.foodId) : undefined;
+      const customFood = item.customFoodId ? this.customFoods.get(item.customFoodId) : undefined;
       const serving = food?.servings.find((candidate) => candidate.servingId === item.servingId) ?? food?.defaultServing;
-      const nutrition = food && serving ? Object.fromEntries(Object.entries(food.nutritionPer100g).map(([key, value]) => [key, value * serving.grams * item.quantity / 100])) as unknown as Nutrients : zeroNutrients;
-      return { mealItemId: `meal-item-${Date.now()}-${index}`, ...item, foodName: food?.name ?? 'Món tự thêm', servingName: serving?.name ?? '1 khẩu phần', totalGrams: serving?.grams ?? 0, nutrition, inputSource: item.referenceType === 'CUSTOM' ? 'CUSTOM_ENTRY' as const : 'MANUAL_SEARCH' as const };
+      const nutrition = customFood ? Object.fromEntries(Object.entries(customFood.nutritionPerServing).map(([key, value]) => [key, value * item.quantity])) as unknown as Nutrients : food && serving ? Object.fromEntries(Object.entries(food.nutritionPer100g).map(([key, value]) => [key, value * serving.grams * item.quantity / 100])) as unknown as Nutrients : zeroNutrients;
+      return { mealItemId: `meal-item-${Date.now()}-${index}`, ...item, foodName: food?.name ?? customFood?.name ?? 'Món tự thêm', servingName: serving?.name ?? customFood?.servingName ?? '1 khẩu phần', totalGrams: serving?.grams ?? customFood?.servingGrams ?? 0, nutrition, inputSource: item.referenceType === 'CUSTOM' ? 'CUSTOM_ENTRY' as const : 'MANUAL_SEARCH' as const };
     });
     const nutritionSummary = items.reduce((sum, item) => add(sum, item.nutrition), zeroNutrients);
     const meal: Meal = { mealId: `meal-${Date.now()}`, mealType: input.mealType, eatenAt: input.eatenAt, businessDate: input.eatenAt.slice(0, 10), imageUrl: null, items, nutritionSummary, healthyScore: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
