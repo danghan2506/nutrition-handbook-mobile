@@ -39,6 +39,14 @@
           }
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép Nutrition Handbook truy cập ảnh để bạn chọn ảnh bữa ăn.",
+          "cameraPermission": "Cho phép Nutrition Handbook sử dụng camera để bạn chụp ảnh bữa ăn.",
+          "microphonePermission": false
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {
