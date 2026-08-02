@@ -45,7 +45,6 @@ it('keeps labels below icons so landscape tabs retain the regular navigator heig
 
 it.each([
   ['explore.tsx', 'Phân tích'],
-  ['meals.tsx', 'Bữa ăn'],
   ['profile.tsx', 'Bạn'],
 ])('%s is an explicit placeholder without fake health data', (file, title) => {
   const route = readFileSync(join(root, 'app', '(tabs)', file), 'utf8');
@@ -54,4 +53,14 @@ it.each([
   expect(route).toContain('accessibilityRole="header"');
   expect(route).not.toContain('caloriesKcal');
   expect(route).not.toContain('healthyScore');
+});
+
+it('meals.tsx is the real meal logging surface', () => {
+  const route = readFileSync(join(root, 'app', '(tabs)', 'meals.tsx'), 'utf8');
+  expect(route).toContain('Tìm thực phẩm hoặc món ăn');
+  expect(route).toContain('Tạo món của tôi');
+  expect(route).toContain('Nhận diện món ăn');
+  expect(route).toContain('Lịch sử trong ngày');
+  expect(route).toContain('mealApi.searchFoods');
+  expect(route).toContain('useMealsStore');
 });

@@ -971,4 +971,3 @@ git commit -m "test: verify home accessibility states"
 ```
 
 If no production adjustment was needed, commit only meaningful new regression assertions. Do not create an empty commit.
-

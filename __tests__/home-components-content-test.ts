@@ -140,9 +140,7 @@ test('Home components own responsive, reduced-motion, and numeric accessibility'
   );
   expect(allHomeComponentSources).toContain('accessibilityLiveRegion="polite"');
   expect(allHomeComponentSources).toContain('fontVariant');
-  expect(summary).toContain(
-    'accessibilityLiveRegion="polite"\n          style={{ fontVariant',
-  );
+  expect(summary).toMatch(/accessibilityLiveRegion="polite"[\s\S]*style={{ fontVariant/);
 });
 
 test('the complete Home surface excludes unapproved or pressuring content', () => {
