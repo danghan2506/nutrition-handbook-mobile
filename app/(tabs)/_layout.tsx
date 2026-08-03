@@ -10,6 +10,7 @@ import React from 'react';
 import { HapticTab } from '@/components/haptic-tab';
 import { View } from '@/components/ui/tw';
 import { useAuthSession } from '@/hooks/use-auth-session';
+import { usePersonalSessionBoundary } from '@/hooks/use-personal-session-boundary';
 
 function TabIcon({
   color,
@@ -32,6 +33,10 @@ function TabIcon({
 
 export default function TabLayout() {
   const { isLoading, session } = useAuthSession();
+  const isPersonalStateReady = usePersonalSessionBoundary(
+    session?.user.id ?? null,
+    isLoading,
+  );
 
   if (isLoading) {
     return null;
@@ -39,6 +44,10 @@ export default function TabLayout() {
 
   if (!session) {
     return <Redirect href={'/(auth)/login' as Href} />;
+  }
+
+  if (!isPersonalStateReady) {
+    return null;
   }
 
   return (
