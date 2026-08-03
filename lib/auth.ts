@@ -3,10 +3,13 @@ import { supabase } from './supabase';
 import type {
   PhoneAuthClient,
   RequestOtpResult,
+  SignOutAuthClient,
+  SignOutResult,
   VerifyOtpResult,
 } from '@/types/auth';
 
 const defaultClient = supabase as unknown as PhoneAuthClient | null;
+const defaultSignOutClient = supabase as unknown as SignOutAuthClient | null;
 
 export async function requestPhoneOtp(
   phoneInput: string,
@@ -96,6 +99,38 @@ export async function verifyPhoneOtp(
       ok: false,
       reason: 'verification_failed',
       message: 'Chưa thể xác thực lúc này. Bạn vui lòng thử lại sau một chút.',
+    };
+  }
+}
+
+export async function signOutCurrentUser(
+  client: SignOutAuthClient | null = defaultSignOutClient,
+): Promise<SignOutResult> {
+  if (!client) {
+    return {
+      ok: false,
+      reason: 'not_configured',
+      message: 'Đăng xuất đang được cấu hình. Bạn vui lòng thử lại sau.',
+    };
+  }
+
+  try {
+    const { error } = await client.auth.signOut();
+
+    if (error) {
+      return {
+        ok: false,
+        reason: 'sign_out_failed',
+        message: 'Chưa thể đăng xuất lúc này. Bạn vui lòng thử lại sau một chút.',
+      };
+    }
+
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      reason: 'sign_out_failed',
+      message: 'Chưa thể đăng xuất lúc này. Bạn vui lòng thử lại sau một chút.',
     };
   }
 }

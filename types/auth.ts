@@ -3,6 +3,7 @@ export type AuthFailureReason =
   | 'invalid_otp'
   | 'not_configured'
   | 'request_failed'
+  | 'sign_out_failed'
   | 'verification_failed';
 
 export type AuthFailure = {
@@ -17,6 +18,8 @@ export type RequestOtpResult =
 
 export type VerifyOtpResult = { ok: true } | AuthFailure;
 
+export type SignOutResult = { ok: true } | AuthFailure;
+
 export type PhoneAuthClient = {
   auth: {
     signInWithOtp: (input: {
@@ -27,5 +30,11 @@ export type PhoneAuthClient = {
       token: string;
       type: 'sms';
     }) => Promise<{ error: unknown | null; data?: unknown }>;
+  };
+};
+
+export type SignOutAuthClient = {
+  auth: {
+    signOut: () => Promise<{ error: unknown | null }>;
   };
 };
