@@ -2,6 +2,7 @@ import {
   DASHBOARD_MOCK_TIMEZONE,
   dashboardDataSource,
 } from '@/data/dashboard-mock';
+import { getBusinessDate } from '@/lib/dashboard-date';
 
 describe('dashboard mock data source', () => {
   it('returns a defensive copy of a documented dashboard day', async () => {
@@ -23,5 +24,14 @@ describe('dashboard mock data source', () => {
     await expect(
       dashboardDataSource.getDashboard('2026-08-10'),
     ).resolves.toBeNull();
+  });
+
+  it("returns meal data for today's business date", async () => {
+    const today = getBusinessDate(new Date(), DASHBOARD_MOCK_TIMEZONE);
+    const data = await dashboardDataSource.getDashboard(today);
+
+    expect(data).not.toBeNull();
+    expect(data?.businessDate).toBe(today);
+    expect(data?.meals.length).toBeGreaterThan(0);
   });
 });

@@ -1,11 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { ActivityLevelSelect } from '@/components/profile/activity-level-select';
 import { GenderSelect } from '@/components/profile/gender-select';
 import { NutritionGoalSelect } from '@/components/profile/nutrition-goal-select';
-import { Pressable, ScrollView, Text, TextInput, View } from '@/components/ui/tw';
+import { Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from '@/components/ui/tw';
 import {
   profileToForm,
   type PersonalProfileForm,
@@ -54,7 +52,7 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-cloud" edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1 }} className="flex-1 bg-cloud" edges={['top', 'bottom']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pb-12 pt-6"

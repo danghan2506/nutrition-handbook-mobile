@@ -1,6 +1,83 @@
+import { getBusinessDate } from '@/lib/dashboard-date';
 import type { DashboardData, DashboardDataSource } from '@/types/dashboard';
 
 export const DASHBOARD_MOCK_TIMEZONE = 'Asia/Ho_Chi_Minh';
+
+function getTodayMockFixture(todayDate: string): DashboardData {
+  return {
+    businessDate: todayDate,
+    timezone: DASHBOARD_MOCK_TIMEZONE,
+    nutritionTotals: {
+      caloriesKcal: 1780,
+      proteinG: 95,
+      carbohydrateG: 190,
+      fatG: 54,
+      fiberG: 22,
+      sugarG: 35,
+      sodiumMg: 1520,
+      dataCompleteness: 1.0,
+    },
+    targets: {
+      caloriesKcal: { min: 1800, max: 2100 },
+      proteinG: { min: 85, max: 120 },
+    },
+    dailyAssessment: {
+      assessmentId: `assessment-${todayDate}`,
+      status: 'READY',
+      score: 82,
+      level: 'GOOD',
+    },
+    meals: [
+      {
+        mealId: `meal-breakfast-${todayDate}`,
+        mealType: 'BREAKFAST',
+        eatenAt: `${todayDate}T07:30:00+07:00`,
+        caloriesKcal: 420,
+        assessmentStatus: 'READY',
+        healthyScore: 85,
+        imageThumbnailUrl: null,
+      },
+      {
+        mealId: `meal-lunch-${todayDate}`,
+        mealType: 'LUNCH',
+        eatenAt: `${todayDate}T12:15:00+07:00`,
+        caloriesKcal: 680,
+        assessmentStatus: 'READY',
+        healthyScore: 78,
+        imageThumbnailUrl: null,
+      },
+      {
+        mealId: `meal-snack-${todayDate}`,
+        mealType: 'SNACK',
+        eatenAt: `${todayDate}T15:30:00+07:00`,
+        caloriesKcal: 150,
+        assessmentStatus: 'READY',
+        healthyScore: 90,
+        imageThumbnailUrl: null,
+      },
+      {
+        mealId: `meal-dinner-${todayDate}`,
+        mealType: 'DINNER',
+        eatenAt: `${todayDate}T18:45:00+07:00`,
+        caloriesKcal: 530,
+        assessmentStatus: 'READY',
+        healthyScore: 80,
+        imageThumbnailUrl: null,
+      },
+    ],
+    latestWeight: {
+      valueKg: 64.0,
+      occurredAt: `${todayDate}T07:00:00+07:00`,
+    },
+    topRecommendations: [
+      {
+        recommendationCode: 'ADD_FIBER',
+        priority: 'MEDIUM',
+        text: 'Thêm một món giàu chất xơ để ngày ăn uống cân bằng hơn.',
+      },
+    ],
+  };
+}
 
 const fixtures: Record<string, DashboardData> = {
   '2026-07-30': {
@@ -75,6 +152,10 @@ function cloneDashboard(data: DashboardData): DashboardData {
 
 export const dashboardDataSource: DashboardDataSource = {
   async getDashboard(date) {
+    const today = getBusinessDate(new Date(), DASHBOARD_MOCK_TIMEZONE);
+    if (date === today) {
+      return getTodayMockFixture(today);
+    }
     const fixture = fixtures[date];
     return fixture ? cloneDashboard(fixture) : null;
   },

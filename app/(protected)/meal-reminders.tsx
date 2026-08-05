@@ -1,9 +1,8 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Pressable, ScrollView, Text, View } from '@/components/ui/tw';
+import { Pressable, SafeAreaView, ScrollView, Text, View } from '@/components/ui/tw';
 import { usePersonalStore } from '@/store/use-personal-store';
 
 const labels = {
@@ -24,7 +23,7 @@ export default function MealRemindersScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-cloud" edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1 }} className="flex-1 bg-cloud" edges={['top', 'bottom']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pb-12 pt-6">

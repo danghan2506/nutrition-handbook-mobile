@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,9 +19,39 @@ export default function AiMealScreen() {
   const [busy, setBusy] = useState(false);
   const appendMeal = useMealsStore((state) => state.appendMeal);
   const pick = async (mode: 'camera' | 'library') => {
-    const permission = mode === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) { Alert.alert('Cần quyền truy cập', mode === 'camera' ? 'Cho phép camera để chụp món ăn.' : 'Cho phép thư viện ảnh để chọn món ăn.'); return; }
-    const result = mode === 'camera' ? await ImagePicker.launchCameraAsync({ quality: 0.82, allowsEditing: true, aspect: [4, 3] }) : await ImagePicker.launchImageLibraryAsync({ quality: 0.82, allowsEditing: true, aspect: [4, 3] });
+    let permission = mode === 'camera'
+      ? await ImagePicker.getCameraPermissionsAsync()
+      : await ImagePicker.getMediaLibraryPermissionsAsync();
+
+    if (!permission.granted && permission.canAskAgain) {
+      permission = mode === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    }
+
+    if (!permission.granted) {
+      const isCamera = mode === 'camera';
+      Alert.alert(
+        `Cần quyền truy cập ${isCamera ? 'Camera' : 'Thư viện ảnh'}`,
+        isCamera
+          ? 'Cho phép ứng dụng truy cập Camera để chụp ảnh món ăn. Bạn có thể bật lại quyền trong Cài đặt ứng dụng.'
+          : 'Cho phép ứng dụng truy cập Thư viện ảnh để chọn món ăn. Bạn có thể bật lại quyền trong Cài đặt ứng dụng.',
+        [
+          { text: 'Để sau', style: 'cancel' },
+          {
+            text: 'Mở Cài đặt',
+            onPress: () => {
+              void Linking.openSettings();
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    const result = mode === 'camera'
+      ? await ImagePicker.launchCameraAsync({ quality: 0.82, allowsEditing: true, aspect: [4, 3] })
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.82, allowsEditing: true, aspect: [4, 3] });
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
     const selected: SelectedMealImage = { uri: asset.uri, fileName: asset.fileName ?? null, mimeType: asset.mimeType ?? null, fileSize: asset.fileSize ?? null };
@@ -31,7 +62,7 @@ export default function AiMealScreen() {
   const analyze = async () => { if (!image || busy) return; setBusy(true); const response = await mealApi.createAnalysis({ image, mealType: 'DINNER' as MealType, eatenAt: new Date(`${params.date ?? new Date().toISOString().slice(0, 10)}T19:00:00`).toISOString() }, createIdempotencyKey()); setAnalysis(response.data); setBusy(false); };
   const confirm = async () => { if (!analysis || !accepted || busy) return; setBusy(true); const response = await mealApi.confirmAnalysis(analysis.analysisId, createIdempotencyKey()); if (response.data) { appendMeal(response.data.meal); router.back(); } else Alert.alert('Chưa ghi lại được', response.error?.message ?? 'Bạn thử lại nhé.'); setBusy(false); };
 
-  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content}><View style={styles.header}><Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable><Text style={styles.title}>Nhận diện món ăn</Text><View style={styles.spacer} /></View><Text style={styles.subtitle}>AURALE sẽ gợi ý món và thành phần. Bạn luôn được xem lại trước khi ghi.</Text>
+  return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content}><View style={styles.header}><Pressable onPress={() => router.back()} style={styles.back}><ChevronLeft color={colors.ink} size={22} /></Pressable><Text style={styles.title}>Nhận diện món ăn</Text><View style={styles.spacer} /></View><Text style={styles.subtitle}>AURALE sẽ gợi ý món và thành phần. Bạn luôn được xem lại trước khi ghi.</Text>
     {!image ? <><View style={styles.permissionCard}><Text style={styles.permissionTitle}>Chọn một ảnh món ăn</Text><Text style={styles.muted}>Ảnh chỉ dùng cho phiên nhận diện này trong bản thử nghiệm.</Text><View style={styles.choiceRow}><Pressable onPress={() => void pick('camera')} style={styles.choice}><Text style={styles.choiceIcon}>＋</Text><Text style={styles.choiceTitle}>Mở camera</Text><Text style={styles.choiceCaption}>Chụp món vừa ăn</Text></Pressable><Pressable onPress={() => void pick('library')} style={styles.choice}><Text style={styles.choiceIcon}>□</Text><Text style={styles.choiceTitle}>Chọn từ máy</Text><Text style={styles.choiceCaption}>JPG, PNG hoặc WebP</Text></Pressable></View></View></> : <><View style={styles.previewCard}><Image source={{ uri: image.uri }} style={styles.preview} /><Pressable onPress={() => setImage(null)} style={styles.change}><Text style={styles.changeText}>Chọn ảnh khác</Text></Pressable></View>{!analysis ? <Pressable onPress={() => void analyze()} style={styles.primary}><Text style={styles.primaryText}>{busy ? 'Đang nhận diện…' : 'Nhận diện món ăn'}</Text></Pressable> : <View style={styles.reviewCard}><View style={styles.reviewHeader}><Text style={styles.reviewTitle}>Kiểm tra gợi ý</Text><Text style={styles.reviewBadge}>CẦN XÁC NHẬN</Text></View><Text style={styles.muted}>Hãy kiểm tra tên món, khẩu phần và các chỉ số trước khi ghi.</Text>{analysis.items.map((item) => <View key={item.analysisItemId} style={styles.item}><View style={styles.itemTop}><Text style={styles.itemName}>{item.mappedFood?.name ?? item.detectedName}</Text><Text style={styles.confidence}>{Math.round(item.confidence * 100)}%</Text></View><Text style={styles.itemMeta}>{item.servingName ?? '1 khẩu phần'} · {Math.round(item.nutrition?.caloriesKcal ?? 0)} kcal</Text></View>)}<Pressable onPress={() => setAccepted((value) => !value)} style={styles.checkRow}><View style={[styles.checkbox, accepted && styles.checkboxChecked]}>{accepted && <Text style={styles.check}>✓</Text>}</View><Text style={styles.checkText}>Tôi đã kiểm tra các gợi ý dinh dưỡng</Text></Pressable><Pressable onPress={() => void confirm()} disabled={!accepted || busy} style={[styles.primary, (!accepted || busy) && styles.disabled]}><Text style={styles.primaryText}>{busy ? 'Đang ghi lại…' : 'Xác nhận và ghi lại'}</Text></Pressable></View>}</>}
   </ScrollView></SafeAreaView>;
 }

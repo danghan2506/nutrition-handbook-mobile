@@ -6,6 +6,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import React from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { View } from '@/components/ui/tw';
@@ -39,7 +40,13 @@ export default function TabLayout() {
   );
 
   if (isLoading) {
-    return null;
+    return (
+      <View
+        accessibilityLabel="Đang tải..."
+        className="flex-1 items-center justify-center bg-cloud">
+        <ActivityIndicator color="#FF9E7A" size="large" />
+      </View>
+    );
   }
 
   if (!session) {
@@ -47,7 +54,13 @@ export default function TabLayout() {
   }
 
   if (!isPersonalStateReady) {
-    return null;
+    return (
+      <View
+        accessibilityLabel="Đang tải..."
+        className="flex-1 items-center justify-center bg-cloud">
+        <ActivityIndicator color="#FF9E7A" size="large" />
+      </View>
+    );
   }
 
   return (

@@ -96,7 +96,7 @@ export default function VerifyOtpScreen() {
               <Pressable
                 accessibilityLabel="Quay lại"
                 accessibilityRole="button"
-                className="h-11 w-11 items-start justify-center"
+                className="h-11 w-11 items-center justify-center"
                 onPress={() => router.back()}>
                 <Feather color="#2F3542" name="arrow-left" size={22} />
               </Pressable>

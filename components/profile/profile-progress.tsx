@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 
 import { PROFILE_STEP_COUNT, profileCopy } from '@/constants/profile';
 import type { ProfileStep } from '@/types/profile';
@@ -22,7 +23,7 @@ export function ProfileProgress({ disabled, step, onBack }: ProfileProgressProps
             className="size-11 items-center justify-center rounded-[14px] border border-quiet-dot bg-surface"
             disabled={disabled}
             onPress={onBack}>
-            <Text className="text-[25px] leading-7 text-ink-navy">‹</Text>
+            <ChevronLeft color="#2F3542" size={22} />
           </Pressable>
         ) : (
           <View className="size-11" />
