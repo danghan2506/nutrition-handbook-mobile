@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert } from 'react-native';
 
-import ProfileScreen from '@/app/(tabs)/profile';
+import ProfileScreen, { calculateBMI } from '@/app/(tabs)/profile';
 import MealRemindersScreen from '@/app/(protected)/meal-reminders';
 import ProfileEditScreen from '@/app/(protected)/profile-edit';
 import SettingsScreen from '@/app/(protected)/settings';
@@ -23,17 +23,21 @@ jest.mock('lucide-react-native', () => {
   const ReactModule = require('react') as typeof React;
   const Icon = () => ReactModule.createElement('icon');
   return {
+    Activity: Icon,
     Bell: Icon,
     ChevronRight: Icon,
     Copy: Icon,
     Dumbbell: Icon,
     Leaf: Icon,
     LogOut: Icon,
+    Ruler: Icon,
     Scale: Icon,
     Settings: Icon,
+    Sparkles: Icon,
     Trash2: Icon,
     TrendingDown: Icon,
     TrendingUp: Icon,
+    UserPen: Icon,
   };
 });
 
@@ -100,6 +104,15 @@ describe('personal screens', () => {
     usePersonalStore.getState().reset();
   });
 
+  it('calculates BMI correctly and categorizes gently', () => {
+    expect(calculateBMI()).toBeNull();
+    expect(calculateBMI(65, 0)).toBeNull();
+    expect(calculateBMI(0, 170)).toBeNull();
+    expect(calculateBMI(50, 170)).toEqual({ bmi: '17.3', label: 'Gầy nhẹ' });
+    expect(calculateBMI(65, 170)).toEqual({ bmi: '22.5', label: 'Cân đối' });
+    expect(calculateBMI(80, 170)).toEqual({ bmi: '27.7', label: 'Đầy đặn' });
+  });
+
   it('saves decimal profile input and immediately updates the profile tab', async () => {
     let editRenderer: ReturnType<typeof TestRenderer.create>;
 
@@ -134,6 +147,29 @@ describe('personal screens', () => {
     expect(profileText).toContain('67.8 kg');
     await TestRenderer.act(async () => {
       editRenderer!.unmount();
+      profileRenderer!.unmount();
+    });
+  });
+
+  it('renders ProfileScreen safely when profile fields are empty or incomplete', async () => {
+    usePersonalStore.setState({
+      profile: {
+        displayName: '',
+        dateOfBirth: '',
+        biologicalSex: 'MALE',
+        heightCm: 170,
+        currentWeightKg: 65,
+        activityLevel: 'active',
+        goalType: 'HEALTHY_EATING',
+      },
+    });
+
+    let profileRenderer: ReturnType<typeof TestRenderer.create>;
+    await TestRenderer.act(async () => {
+      profileRenderer = TestRenderer.create(<ProfileScreen />);
+    });
+    expect(profileRenderer!).toBeDefined();
+    await TestRenderer.act(async () => {
       profileRenderer!.unmount();
     });
   });
