@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { mealApi, createIdempotencyKey } from '@/lib/meal-api';
@@ -35,7 +36,7 @@ export default function CreateMealScreen() {
     if (response.data) router.back();
   };
 
-  return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><View style={styles.header}><Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable><Text style={styles.title}>Tạo món của tôi</Text><View style={styles.spacer} /></View><Text style={styles.subtitle}>Nhập thông tin để AURALE ghi lại đúng khẩu phần của bạn.</Text>
+  return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><View style={styles.header}><Pressable onPress={() => router.back()} style={styles.back}><ChevronLeft color={colors.ink} size={22} /></Pressable><Text style={styles.title}>Tạo món của tôi</Text><View style={styles.spacer} /></View><Text style={styles.subtitle}>Nhập thông tin để AURALE ghi lại đúng khẩu phần của bạn.</Text>
     <Text style={styles.label}>Bữa nào?</Text><View style={styles.segment}>{(Object.keys(mealTypeLabels) as MealType[]).map((type) => <Pressable key={type} onPress={() => setMealType(type)} style={[styles.segmentItem, mealType === type && styles.segmentActive]}><Text style={[styles.segmentText, mealType === type && styles.segmentTextActive]}>{mealTypeLabels[type]}</Text></Pressable>)}</View>
     <Text style={styles.label}>Tên món ăn</Text><TextInput value={name} onChangeText={setName} placeholder="Ví dụ: Bánh mì trứng" placeholderTextColor={colors.slate} style={styles.input} />
     <View style={styles.twoCol}><View style={styles.col}><Text style={styles.label}>Khẩu phần</Text><TextInput value={serving} onChangeText={setServing} style={styles.input} /></View><View style={styles.col}><Text style={styles.label}>Khối lượng (g)</Text><TextInput value={grams} onChangeText={setGrams} keyboardType="decimal-pad" style={styles.input} /></View></View>

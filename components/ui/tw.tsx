@@ -7,6 +7,7 @@ import {
   TextInput as RNTextInput,
   View as RNView,
 } from "react-native";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 type WithClassName<T> = T & { className?: string };
 
@@ -42,4 +43,10 @@ export function ScrollView(
     className: "style",
     contentContainerClassName: "contentContainerStyle",
   });
+}
+
+export function SafeAreaView(
+  props: WithClassName<React.ComponentProps<typeof RNSafeAreaView>>,
+) {
+  return useCssElement(RNSafeAreaView, props, { className: "style" });
 }

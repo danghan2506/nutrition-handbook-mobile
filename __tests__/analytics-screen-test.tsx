@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('analytics screen UI integration', () => {
-  const source = readFileSync(join(process.cwd(), 'app/(tabs)/insights.tsx'), 'utf8');
+  const source = readFileSync(join(process.cwd(), 'app/(tabs)/explore.tsx'), 'utf8');
 
   it('keeps the screen on local fixture data until API integration is explicitly enabled', () => {
     expect(source).toContain("from '../../data/mockAnalytics'");

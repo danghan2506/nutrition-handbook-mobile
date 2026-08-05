@@ -1,22 +1,96 @@
-import { ScrollView, Text, View } from '@/components/ui/tw';
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View, SafeAreaView } from "@/components/ui/tw";
+import {
+  AnalyticsSegmentControl,
+  type AnalyticsTab,
+} from "../../components/analytics/AnalyticsSegmentControl";
+import { DailyHealthyScoreCard } from "../../components/analytics/DailyHealthyScoreCard";
+import { NutrientDetailsList } from "../../components/analytics/NutrientDetailsList";
+import { TopRecommendationsCard } from "../../components/analytics/TopRecommendationsCard";
+import { WeeklyTrendsChart } from "../../components/analytics/WeeklyTrendsChart";
+import { WeightSummaryCard } from "../../components/analytics/WeightSummaryCard";
+import {
+  mockDailyAssessment,
+  mockTrendPoints,
+  mockWeightTrend,
+} from '../../data/mockAnalytics';
+import type { AnalyticsPeriodDays } from "../../types/analytics";
+
+const periods: AnalyticsPeriodDays[] = [7, 30];
 
 export default function AnalysisScreen() {
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("overview");
+  const [periodDays, setPeriodDays] = useState<AnalyticsPeriodDays>(7);
+
   return (
-    <ScrollView
-      className="flex-1 bg-cloud"
-      contentContainerClassName="px-5 pb-28 pt-6"
-      contentInsetAdjustmentBehavior="automatic"
-      showsVerticalScrollIndicator={false}>
-      <View className="mx-auto w-full max-w-[440px]">
-        <Text
-          accessibilityRole="header"
-          className="font-rounded text-[30px] font-extrabold text-ink-navy">
-          Phân tích
-        </Text>
-        <Text className="mt-3 text-[16px] leading-6 text-soft-slate">
-          Xu hướng dinh dưỡng của bạn sẽ xuất hiện tại đây.
-        </Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF9F0' }} className="flex-1 bg-[#FFF9F0]">
+      <View className="flex-row justify-between items-center px-4 pt-3 pb-2">
+        <View>
+          <Text accessibilityRole="header" className="text-2xl font-bold text-[#2F3542]">
+            Phân tích dinh dưỡng
+          </Text>
+          <Text className="text-xs text-[#697386]">
+            Theo dõi xu hướng & sức khỏe bữa ăn
+          </Text>
+        </View>
+        <View className="flex-row bg-[#F0EAE1] p-1 rounded-full">
+          {periods.map((value) => (
+            <Pressable
+              key={value}
+              onPress={() => setPeriodDays(value)}
+              accessibilityRole="button"
+              accessibilityLabel={`${value} ngày`}
+              accessibilityState={{ selected: periodDays === value }}
+              className={`px-3 py-1 rounded-full min-h-[44px] items-center justify-center ${periodDays === value ? "bg-[#FF9E7A]" : "bg-transparent"}`}
+            >
+              <Text
+                className={`text-xs font-semibold ${periodDays === value ? "text-white" : "text-[#697386]"}`}
+              >
+                {value} ngày
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
-    </ScrollView>
+
+      <AnalyticsSegmentControl
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+      />
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
+        {activeTab === "overview" ? (
+          <>
+            <DailyHealthyScoreCard
+              status={mockDailyAssessment.status}
+              score={mockDailyAssessment.score}
+              level={mockDailyAssessment.level}
+              mealCount={mockDailyAssessment.mealCount}
+            />
+            <WeeklyTrendsChart
+              points={mockTrendPoints}
+              periodDays={periodDays}
+            />
+            <TopRecommendationsCard
+              recommendations={mockDailyAssessment.recommendations}
+            />
+            <WeightSummaryCard
+              latestWeightKg={mockWeightTrend.latestWeightKg}
+              changeFromFirstKg={mockWeightTrend.changeFromFirstKg}
+              periodDays={periodDays}
+              firstOccurredAt={mockWeightTrend.firstOccurredAt}
+            />
+          </>
+        ) : (
+          <NutrientDetailsList
+            nutritionSummary={mockDailyAssessment.nutritionSummary}
+            targets={mockDailyAssessment.targets}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

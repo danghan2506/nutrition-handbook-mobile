@@ -54,8 +54,7 @@ export function GenderSelect({ value, error, onChange }: GenderSelectProps) {
         visible={isOpen}>
         <SafeAreaView
           accessibilityViewIsModal
-          className="flex-1 justify-end"
-          style={{ backgroundColor: 'rgba(47,53,66,0.3)' }}>
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(47,53,66,0.3)' }}>
           <Pressable
             accessibilityLabel="Đóng danh sách giới tính"
             className="flex-1"
