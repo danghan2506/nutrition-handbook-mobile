@@ -413,10 +413,10 @@ export default function CreateMealScreen() {
               </Pressable>
 
               <Pressable
-                style={styles.chipAction}
+                style={[styles.chip, customSheetVisible && styles.chipActive]}
                 onPress={() => setCustomSheetVisible(true)}
               >
-                <Text style={styles.chipActionText}>
+                <Text style={[styles.chipText, customSheetVisible && styles.chipTextActive]}>
                   ✏️ + Nhập món mới
                 </Text>
               </Pressable>
