@@ -40,14 +40,14 @@ const colors = {
   border: '#E9E1D8',
 };
 
-type FilterChip = 'CATALOG' | 'FAVORITES' | 'RECENT';
+type FilterChip = 'RECENT' | 'FAVORITES';
 
 export default function CreateMealScreen() {
   const params = useLocalSearchParams<{ foodId?: string; date?: string; mealType?: MealType }>();
 
   const [mealType, setMealType] = useState<MealType>(params.mealType ?? 'LUNCH');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeChip, setActiveChip] = useState<FilterChip>('CATALOG');
+  const [activeChip, setActiveChip] = useState<FilterChip>('RECENT');
   const [customSheetVisible, setCustomSheetVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customFoodsList, setCustomFoodsList] = useState<CustomFood[]>([]);
@@ -404,11 +404,20 @@ export default function CreateMealScreen() {
           <View style={styles.chipsContainer}>
             <ScrollView horizontal contentContainerStyle={styles.chipsScroll} showsHorizontalScrollIndicator={false}>
               <Pressable
-                style={[styles.chip, activeChip === 'CATALOG' && styles.chipActive]}
-                onPress={() => setActiveChip('CATALOG')}
+                style={[styles.chip, activeChip === 'RECENT' && styles.chipActive]}
+                onPress={() => setActiveChip('RECENT')}
               >
-                <Text style={[styles.chipText, activeChip === 'CATALOG' && styles.chipTextActive]}>
-                  🔍 Catalog
+                <Text style={[styles.chipText, activeChip === 'RECENT' && styles.chipTextActive]}>
+                  📋 Gần đây
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.chip, activeChip === 'FAVORITES' && styles.chipActive]}
+                onPress={() => setActiveChip('FAVORITES')}
+              >
+                <Text style={[styles.chipText, activeChip === 'FAVORITES' && styles.chipTextActive]}>
+                  ⭐ Tạo bởi tôi
                 </Text>
               </Pressable>
 
@@ -420,90 +429,21 @@ export default function CreateMealScreen() {
                   ✏️ + Nhập món mới
                 </Text>
               </Pressable>
-
-              <Pressable
-                style={[styles.chip, activeChip === 'FAVORITES' && styles.chipActive]}
-                onPress={() => setActiveChip('FAVORITES')}
-              >
-                <Text style={[styles.chipText, activeChip === 'FAVORITES' && styles.chipTextActive]}>
-                  ⭐ Món tủ của tôi
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.chip, activeChip === 'RECENT' && styles.chipActive]}
-                onPress={() => setActiveChip('RECENT')}
-              >
-                <Text style={[styles.chipText, activeChip === 'RECENT' && styles.chipTextActive]}>
-                  📋 Bữa ăn gần đây
-                </Text>
-              </Pressable>
             </ScrollView>
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            {/* Catalog / Custom Food List */}
+            {/* Custom Food / Recent List Header */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {activeChip === 'CATALOG'
-                  ? 'Thực phẩm gợi ý'
-                  : activeChip === 'FAVORITES'
-                  ? 'Món tủ của tôi'
-                  : 'Gần đây'}
+                {activeChip === 'RECENT' ? 'Gần đây' : 'Tạo bởi tôi'}
               </Text>
               <Text style={styles.sectionCount}>
-                {activeChip === 'CATALOG'
-                  ? `${filteredCatalogFoods.length} món`
-                  : activeChip === 'FAVORITES'
-                  ? `${filteredCustomFoods.length} món`
-                  : `${recentFoods.length} món`}
+                {activeChip === 'RECENT' ? `${recentFoods.length} món` : `${filteredCustomFoods.length} món`}
               </Text>
             </View>
 
             {/* List based on activeChip */}
-            {activeChip === 'CATALOG' && (
-              <View style={styles.foodList}>
-                {filteredCatalogFoods.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>Không tìm thấy thực phẩm phù hợp</Text>
-                  </View>
-                ) : (
-                  filteredCatalogFoods.map((food) => {
-                    const ratio = food.defaultServing.grams / 100;
-                    const cals = Math.round(food.nutritionPer100g.caloriesKcal * ratio);
-                    const prot = Math.round(food.nutritionPer100g.proteinG * ratio * 10) / 10;
-                    const carb = Math.round(food.nutritionPer100g.carbohydrateG * ratio * 10) / 10;
-                    const fat = Math.round(food.nutritionPer100g.fatG * ratio * 10) / 10;
-
-                    const inDraft = draftItems.find((di) => di.foodId === food.foodId);
-
-                    return (
-                      <View key={food.foodId} style={styles.foodCard}>
-                        <View style={styles.foodInfo}>
-                          <Text style={styles.foodName}>{food.name}</Text>
-                          <Text style={styles.foodMeta}>
-                            {food.defaultServing.name} • {cals} kcal
-                          </Text>
-                          <View style={styles.macroBadges}>
-                            <Text style={styles.macroTag}>⚡ {prot}g protein</Text>
-                            <Text style={styles.macroTag}>🌿 {carb}g carb</Text>
-                            <Text style={styles.macroTag}>💧 {fat}g fat</Text>
-                          </View>
-                        </View>
-                        <Pressable
-                          accessibilityLabel={`Thêm ${food.name}`}
-                          accessibilityRole="button"
-                          style={styles.addBtn}
-                          onPress={() => addCatalogFoodToDraft(food)}
-                        >
-                          <Ionicons color={colors.ink} name="add" size={20} />
-                        </Pressable>
-                      </View>
-                    );
-                  })
-                )}
-              </View>
-            )}
 
             {activeChip === 'FAVORITES' && (
               <View style={styles.foodList}>
