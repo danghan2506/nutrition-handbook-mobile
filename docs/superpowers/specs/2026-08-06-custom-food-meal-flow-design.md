@@ -38,8 +38,8 @@ This design document defines the complete UI/UX and API interaction specificatio
 - **Default Quantity**: Every item added to the meal draft initializes with `quantity = 1`.
 - **Quantity Stepper**: Stepper buttons `[ - 1 + ]` allow adjusting quantity.
 - **Removal of Static Delete Icon**: Static `✕` delete buttons are removed from item cards.
-- **Swipe-Right to Delete**:
-  - Swiping an item card to the **right** (`Swipe Right`) reveals a red action area with a white trash icon `🗑️`.
+- **Swipe-Left to Delete**:
+  - Swiping an item card to the **left** (`Swipe Left`) reveals a red action area with a white trash icon `🗑️`.
   - Tapping the trash icon triggers a confirmation Alert dialog:
     > *"Bạn có chắc chắn muốn xóa món [Tên món] khỏi bữa ăn không?"*
     > `[Hủy]` • `[Xóa]`

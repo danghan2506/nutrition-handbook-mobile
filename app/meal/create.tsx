@@ -258,7 +258,7 @@ export default function CreateMealScreen() {
   const handleInfoPress = () => {
     Alert.alert(
       'Hướng dẫn tạo bữa ăn',
-      '• Tìm kiếm thực phẩm từ thư viện hoặc tự nhập món mới.\n• Nhấn nút [+] để thêm món vào bữa ăn.\n• Vuốt sang phải thẻ món ăn để xóa.\n• Thay đổi số lượng khẩu phần trực tiếp trên thẻ.\n• Bấm "Ghi nhận Bữa ăn" để hoàn tất.',
+      '• Tìm kiếm thực phẩm từ thư viện hoặc tự nhập món mới.\n• Nhấn nút [+] để thêm món vào bữa ăn.\n• Vuốt sang trái thẻ món ăn để xóa.\n• Thay đổi số lượng khẩu phần trực tiếp trên thẻ.\n• Bấm "Ghi nhận Bữa ăn" để hoàn tất.',
       [{ text: 'Đã hiểu' }]
     );
   };
