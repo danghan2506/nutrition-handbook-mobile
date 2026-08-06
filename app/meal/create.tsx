@@ -493,11 +493,10 @@ export default function CreateMealScreen() {
                         <Pressable
                           accessibilityLabel={`Thêm ${food.name}`}
                           accessibilityRole="button"
-                          style={[styles.addBtn, inDraft && styles.addBtnActive]}
+                          style={styles.addBtn}
                           onPress={() => addCatalogFoodToDraft(food)}
                         >
-                          <Ionicons color={inDraft ? colors.surface : colors.ink} name="add" size={20} />
-                          {inDraft ? <Text style={styles.addBtnBadge}>{inDraft.quantity}</Text> : null}
+                          <Ionicons color={colors.ink} name="add" size={20} />
                         </Pressable>
                       </View>
                     );
