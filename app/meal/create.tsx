@@ -351,16 +351,7 @@ export default function CreateMealScreen() {
               <Ionicons color={colors.ink} name="chevron-back" size={24} />
             </Pressable>
 
-            <Pressable
-              accessibilityLabel="Chọn loại bữa ăn"
-              accessibilityRole="button"
-              style={styles.dropdownBtn}
-              onPress={handleOpenMealTypePicker}
-            >
-              <Text style={styles.dropdownTitle}>
-                {mealTypeLabels[mealType]} · Hôm nay ▾
-              </Text>
-            </Pressable>
+            <View style={styles.flex} />
 
             <Pressable
               accessibilityLabel="Thông tin hướng dẫn"
