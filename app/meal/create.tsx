@@ -17,12 +17,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CustomFoodSheet } from '@/components/meal/custom-food-sheet';
 import { SwipeableMealItem } from '@/components/meal/swipeable-meal-item';
-import { mealTypeLabels } from '@/constants/meals';
 import { mockCatalogFoods } from '@/data/mock-meals';
 import { createIdempotencyKey, mealApi } from '@/lib/meal-api';
 import { useMealsStore } from '@/store/use-meals-store';
 import type {
-  CatalogFood,
   CreateMealItemInput,
   CustomFood,
   MealDraftItem,
@@ -88,18 +86,6 @@ export default function CreateMealScreen() {
   const appendMeal = useMealsStore((state) => state.appendMeal);
   const storeMeals = useMealsStore((state) => state.meals);
 
-  // Live filter available catalog foods
-  const filteredCatalogFoods = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return mockCatalogFoods;
-    return mockCatalogFoods.filter(
-      (f) =>
-        f.name.toLowerCase().includes(q) ||
-        f.matchedName.toLowerCase().includes(q) ||
-        f.category.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
-
   // Live filter custom foods
   const filteredCustomFoods = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -150,39 +136,6 @@ export default function CreateMealScreen() {
       { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0, fiberG: 0, sugarG: 0, sodiumMg: 0 }
     );
   }, [draftItems]);
-
-  const addCatalogFoodToDraft = (food: CatalogFood) => {
-    const existingIndex = draftItems.findIndex((item) => item.foodId === food.foodId);
-    if (existingIndex >= 0) {
-      setDraftItems((prev) =>
-        prev.map((item, idx) => (idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item))
-      );
-    } else {
-      const ratio = food.defaultServing.grams / 100;
-      const unitNutrients: Nutrients = {
-        caloriesKcal: Math.round(food.nutritionPer100g.caloriesKcal * ratio),
-        proteinG: Math.round(food.nutritionPer100g.proteinG * ratio * 10) / 10,
-        carbohydrateG: Math.round(food.nutritionPer100g.carbohydrateG * ratio * 10) / 10,
-        fatG: Math.round(food.nutritionPer100g.fatG * ratio * 10) / 10,
-        fiberG: Math.round(food.nutritionPer100g.fiberG * ratio * 10) / 10,
-        sugarG: Math.round(food.nutritionPer100g.sugarG * ratio * 10) / 10,
-        sodiumMg: Math.round(food.nutritionPer100g.sodiumMg * ratio * 10) / 10,
-      };
-
-      const newItem: MealDraftItem = {
-        draftItemId: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        referenceType: 'CATALOG',
-        foodId: food.foodId,
-        foodName: food.name,
-        servingId: food.defaultServing.servingId,
-        servingName: food.defaultServing.name,
-        quantity: 1,
-        totalGrams: food.defaultServing.grams,
-        nutrition: unitNutrients,
-      };
-      setDraftItems((prev) => [...prev, newItem]);
-    }
-  };
 
   const addCustomFoodToDraft = (customFood: CustomFood) => {
     const existingIndex = draftItems.findIndex((item) => item.customFoodId === customFood.customFoodId);
@@ -241,33 +194,11 @@ export default function CreateMealScreen() {
     setDraftItems((prev) => prev.filter((item) => item.draftItemId !== draftItemId));
   };
 
-  const handleOpenMealTypePicker = () => {
-    Alert.alert(
-      'Chọn loại bữa ăn',
-      'Chọn bữa ăn bạn muốn ghi nhận:',
-      [
-        { text: 'Bữa sáng 🍳', onPress: () => setMealType('BREAKFAST') },
-        { text: 'Bữa trưa 🍱', onPress: () => setMealType('LUNCH') },
-        { text: 'Bữa tối 🍲', onPress: () => setMealType('DINNER') },
-        { text: 'Bữa phụ 🥪', onPress: () => setMealType('SNACK') },
-        { text: 'Đóng', style: 'cancel' },
-      ]
-    );
-  };
-
   const handleInfoPress = () => {
     Alert.alert(
       'Hướng dẫn tạo bữa ăn',
       '• Tìm kiếm thực phẩm từ thư viện hoặc tự nhập món mới.\n• Nhấn nút [+] để thêm món vào bữa ăn.\n• Vuốt sang trái thẻ món ăn để xóa.\n• Thay đổi số lượng khẩu phần trực tiếp trên thẻ.\n• Bấm "Ghi nhận Bữa ăn" để hoàn tất.',
       [{ text: 'Đã hiểu' }]
-    );
-  };
-
-  const handleBarcodePress = () => {
-    Alert.alert(
-      'Quét mã vạch',
-      'Tính năng quét mã vạch bao bì thực phẩm đang được phát triển.',
-      [{ text: 'Đóng' }]
     );
   };
 
@@ -369,7 +300,7 @@ export default function CreateMealScreen() {
               <Ionicons color={colors.slate} name="search-outline" size={20} style={styles.searchIcon} />
               <TextInput
                 accessibilityLabel="Tìm thực phẩm hoặc món ăn"
-                placeholder="🔍 Tìm thực phẩm hoặc món ăn"
+                placeholder="Tìm thực phẩm hoặc món ăn"
                 placeholderTextColor={colors.slate}
                 style={styles.searchInput}
                 value={searchQuery}
@@ -380,14 +311,6 @@ export default function CreateMealScreen() {
                   <Ionicons color={colors.slate} name="close-circle" size={18} />
                 </Pressable>
               ) : null}
-              <Pressable
-                accessibilityLabel="Quét mã vạch"
-                accessibilityRole="button"
-                style={styles.barcodeBtn}
-                onPress={handleBarcodePress}
-              >
-                <Ionicons color={colors.ink} name="barcode-outline" size={22} />
-              </Pressable>
             </View>
           </View>
 
@@ -417,7 +340,7 @@ export default function CreateMealScreen() {
                 onPress={() => setCustomSheetVisible(true)}
               >
                 <Text style={[styles.chipText, customSheetVisible && styles.chipTextActive]}>
-                  ✏️ + Nhập món mới
+                  ✏️ Nhập món mới
                 </Text>
               </Pressable>
             </ScrollView>
@@ -440,7 +363,7 @@ export default function CreateMealScreen() {
               <View style={styles.foodList}>
                 {filteredCustomFoods.length === 0 ? (
                   <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>Chưa có món tủ nào. Nhấn &quot;+ Nhập món mới&quot; để tạo!</Text>
+                    <Text style={styles.emptyText}>Chưa có món tủ nào. Nhấn &quot;Nhập món mới&quot; để tạo!</Text>
                   </View>
                 ) : (
                   filteredCustomFoods.map((customFood) => {
@@ -655,10 +578,6 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 4,
-  },
-  barcodeBtn: {
-    padding: 6,
-    marginLeft: 4,
   },
   chipsContainer: {
     marginBottom: 12,
