@@ -1,48 +1,827 @@
-import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { mealApi, createIdempotencyKey } from '@/lib/meal-api';
-import { useMealsStore } from '@/store/use-meals-store';
-import { mockCatalogFoods } from '@/data/mock-meals';
-import { mealTypeLabels } from '@/constants/meals';
-import type { MealType, Nutrients } from '@/types/meals';
 
-const colors = { canvas: '#FFF9F0', surface: '#FFFFFF', ink: '#2F3542', slate: '#697386', apricot: '#FF9E7A', peach: '#FFF0E7', border: '#E9E1D8' };
-const nutrientFields: { key: keyof Nutrients; label: string; unit: string }[] = [
-  { key: 'caloriesKcal', label: 'Năng lượng', unit: 'kcal' }, { key: 'proteinG', label: 'Đạm', unit: 'g' }, { key: 'carbohydrateG', label: 'Tinh bột', unit: 'g' }, { key: 'fatG', label: 'Chất béo', unit: 'g' }, { key: 'fiberG', label: 'Chất xơ', unit: 'g' }, { key: 'sugarG', label: 'Đường', unit: 'g' }, { key: 'sodiumMg', label: 'Natri', unit: 'mg' },
-];
-const blankNutrients: Nutrients = { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0, fiberG: 0, sugarG: 0, sodiumMg: 0 };
+import { CustomFoodSheet } from '@/components/meal/custom-food-sheet';
+import { SwipeableMealItem } from '@/components/meal/swipeable-meal-item';
+import { mockCatalogFoods } from '@/data/mock-meals';
+import { createIdempotencyKey, mealApi } from '@/lib/meal-api';
+import { useMealsStore } from '@/store/use-meals-store';
+import type {
+  CreateMealItemInput,
+  CustomFood,
+  MealDraftItem,
+  MealType,
+  Nutrients,
+} from '@/types/meals';
+
+const colors = {
+  canvas: '#FFF9F0',
+  surface: '#FFFFFF',
+  ink: '#2F3542',
+  slate: '#697386',
+  apricot: '#FF9E7A',
+  peach: '#FFF0E7',
+  border: '#E9E1D8',
+};
+
+type FilterChip = 'RECENT' | 'FAVORITES';
 
 export default function CreateMealScreen() {
-  const params = useLocalSearchParams<{ foodId?: string; date?: string }>();
-  const food = useMemo(() => mockCatalogFoods.find((item) => item.foodId === params.foodId), [params.foodId]);
-  const [mealType, setMealType] = useState<MealType>('LUNCH');
-  const [name, setName] = useState(food?.name ?? '');
-  const [serving, setServing] = useState(food?.defaultServing.name ?? '1 khẩu phần');
-  const [grams, setGrams] = useState(String(food?.defaultServing.grams ?? 100));
-  const [nutrients, setNutrients] = useState<Nutrients>(food?.nutritionPer100g ?? blankNutrients);
-  const [saving, setSaving] = useState(false);
-  const appendMeal = useMealsStore((state) => state.appendMeal);
+  const params = useLocalSearchParams<{ foodId?: string; date?: string; mealType?: MealType }>();
 
-  const updateNutrient = (key: keyof Nutrients, value: string) => setNutrients((current) => ({ ...current, [key]: Number(value.replace(',', '.')) || 0 }));
-  const save = async () => {
-    if (!name.trim() || saving) return;
-    setSaving(true);
-    const eatenAt = new Date(`${params.date ?? new Date().toISOString().slice(0, 10)}T12:00:00`).toISOString(); const custom = food ? null : await mealApi.createCustomFood({ name, servingName: serving, servingGrams: Number(grams) || 100, nutritionPerServing: nutrients }); const response = await mealApi.createMeal({ mealType, eatenAt, items: food ? [{ referenceType: 'CATALOG', foodId: food.foodId, servingId: food.defaultServing.servingId, quantity: 1 }] : [{ referenceType: 'CUSTOM', customFoodId: custom?.data?.customFoodId, quantity: 1 }] }, createIdempotencyKey());
-    if (response.data) appendMeal(response.data);
-    setSaving(false);
-    if (response.data) router.back();
+  const [mealType, setMealType] = useState<MealType>(params.mealType ?? 'LUNCH');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeChip, setActiveChip] = useState<FilterChip>('RECENT');
+  const [customSheetVisible, setCustomSheetVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customFoodsList, setCustomFoodsList] = useState<CustomFood[]>([]);
+
+  // Initialize draft items with foodId param if present
+  const [draftItems, setDraftItems] = useState<MealDraftItem[]>(() => {
+    if (params.foodId) {
+      const initialFood = mockCatalogFoods.find((f) => f.foodId === params.foodId);
+      if (initialFood) {
+        const ratio = initialFood.defaultServing.grams / 100;
+        const unitNutrients: Nutrients = {
+          caloriesKcal: Math.round(initialFood.nutritionPer100g.caloriesKcal * ratio),
+          proteinG: Math.round(initialFood.nutritionPer100g.proteinG * ratio * 10) / 10,
+          carbohydrateG: Math.round(initialFood.nutritionPer100g.carbohydrateG * ratio * 10) / 10,
+          fatG: Math.round(initialFood.nutritionPer100g.fatG * ratio * 10) / 10,
+          fiberG: Math.round(initialFood.nutritionPer100g.fiberG * ratio * 10) / 10,
+          sugarG: Math.round(initialFood.nutritionPer100g.sugarG * ratio * 10) / 10,
+          sodiumMg: Math.round(initialFood.nutritionPer100g.sodiumMg * ratio * 10) / 10,
+        };
+        return [
+          {
+            draftItemId: `draft-init-${Date.now()}`,
+            referenceType: 'CATALOG',
+            foodId: initialFood.foodId,
+            foodName: initialFood.name,
+            servingId: initialFood.defaultServing.servingId,
+            servingName: initialFood.defaultServing.name,
+            quantity: 1,
+            totalGrams: initialFood.defaultServing.grams,
+            nutrition: unitNutrients,
+          },
+        ];
+      }
+    }
+    return [];
+  });
+
+  const appendMeal = useMealsStore((state) => state.appendMeal);
+  const storeMeals = useMealsStore((state) => state.meals);
+
+  // Live filter custom foods
+  const filteredCustomFoods = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return customFoodsList;
+    return customFoodsList.filter((cf) => cf.name.toLowerCase().includes(q));
+  }, [searchQuery, customFoodsList]);
+
+  // Recent foods from meals store
+  const recentFoods = useMemo(() => {
+    const itemsList: { foodName: string; servingName: string; caloriesKcal: number; item: Omit<MealDraftItem, 'draftItemId'> }[] = [];
+    storeMeals.forEach((m) => {
+      m.items.forEach((item) => {
+        if (!itemsList.some((x) => x.foodName === item.foodName)) {
+          itemsList.push({
+            foodName: item.foodName,
+            servingName: item.servingName,
+            caloriesKcal: item.nutrition.caloriesKcal,
+            item: {
+              referenceType: item.referenceType,
+              foodId: item.foodId,
+              customFoodId: item.customFoodId,
+              foodName: item.foodName,
+              servingId: item.servingId,
+              servingName: item.servingName,
+              quantity: 1,
+              totalGrams: item.totalGrams,
+              nutrition: item.nutrition,
+            },
+          });
+        }
+      });
+    });
+    return itemsList;
+  }, [storeMeals]);
+
+  // Calculate real-time aggregate nutrition summary
+  const totalNutrition = useMemo(() => {
+    return draftItems.reduce<Nutrients>(
+      (acc, item) => ({
+        caloriesKcal: acc.caloriesKcal + Math.round((item.nutrition.caloriesKcal ?? 0) * item.quantity),
+        proteinG: Math.round((acc.proteinG + (item.nutrition.proteinG ?? 0) * item.quantity) * 10) / 10,
+        carbohydrateG: Math.round((acc.carbohydrateG + (item.nutrition.carbohydrateG ?? 0) * item.quantity) * 10) / 10,
+        fatG: Math.round((acc.fatG + (item.nutrition.fatG ?? 0) * item.quantity) * 10) / 10,
+        fiberG: Math.round((acc.fiberG + (item.nutrition.fiberG ?? 0) * item.quantity) * 10) / 10,
+        sugarG: Math.round((acc.sugarG + (item.nutrition.sugarG ?? 0) * item.quantity) * 10) / 10,
+        sodiumMg: Math.round((acc.sodiumMg + (item.nutrition.sodiumMg ?? 0) * item.quantity) * 10) / 10,
+      }),
+      { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0, fiberG: 0, sugarG: 0, sodiumMg: 0 }
+    );
+  }, [draftItems]);
+
+  const addCustomFoodToDraft = (customFood: CustomFood) => {
+    const existingIndex = draftItems.findIndex((item) => item.customFoodId === customFood.customFoodId);
+    if (existingIndex >= 0) {
+      setDraftItems((prev) =>
+        prev.map((item, idx) => (idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item))
+      );
+    } else {
+      const newItem: MealDraftItem = {
+        draftItemId: `draft-custom-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        referenceType: 'CUSTOM',
+        customFoodId: customFood.customFoodId,
+        foodName: customFood.name,
+        servingName: customFood.servingName,
+        quantity: 1,
+        totalGrams: customFood.servingGrams,
+        nutrition: customFood.nutritionPerServing,
+      };
+      setDraftItems((prev) => [...prev, newItem]);
+    }
   };
 
-  return <SafeAreaView style={styles.safe}><KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><View style={styles.header}><Pressable onPress={() => router.back()} style={styles.back}><ChevronLeft color={colors.ink} size={22} /></Pressable><Text style={styles.title}>Tạo món của tôi</Text><View style={styles.spacer} /></View><Text style={styles.subtitle}>Nhập thông tin để AURALE ghi lại đúng khẩu phần của bạn.</Text>
-    <Text style={styles.label}>Bữa nào?</Text><View style={styles.segment}>{(Object.keys(mealTypeLabels) as MealType[]).map((type) => <Pressable key={type} onPress={() => setMealType(type)} style={[styles.segmentItem, mealType === type && styles.segmentActive]}><Text style={[styles.segmentText, mealType === type && styles.segmentTextActive]}>{mealTypeLabels[type]}</Text></Pressable>)}</View>
-    <Text style={styles.label}>Tên món ăn</Text><TextInput value={name} onChangeText={setName} placeholder="Ví dụ: Bánh mì trứng" placeholderTextColor={colors.slate} style={styles.input} />
-    <View style={styles.twoCol}><View style={styles.col}><Text style={styles.label}>Khẩu phần</Text><TextInput value={serving} onChangeText={setServing} style={styles.input} /></View><View style={styles.col}><Text style={styles.label}>Khối lượng (g)</Text><TextInput value={grams} onChangeText={setGrams} keyboardType="decimal-pad" style={styles.input} /></View></View>
-    <View style={styles.nutritionHeader}><Text style={styles.label}>Chỉ số dinh dưỡng</Text><Text style={styles.helper}>trên khẩu phần</Text></View><View style={styles.nutrientGrid}>{nutrientFields.map((field) => <View key={field.key} style={styles.nutrientCell}><Text style={styles.nutrientLabel}>{field.label}</Text><View style={styles.nutrientInputWrap}><TextInput value={String(nutrients[field.key])} onChangeText={(value) => updateNutrient(field.key, value)} keyboardType="decimal-pad" style={styles.nutrientInput} /><Text style={styles.unit}>{field.unit}</Text></View></View>)}</View>
-    <View style={styles.review}><Text style={styles.reviewTitle}>Bạn sẽ ghi lại</Text><Text style={styles.reviewText}>{mealTypeLabels[mealType]} · {name || 'Chưa đặt tên'} · {Math.round(nutrients.caloriesKcal)} kcal</Text></View><Pressable onPress={() => void save()} style={[styles.primary, (!name.trim() || saving) && styles.disabled]} disabled={!name.trim() || saving}><Text style={styles.primaryText}>{saving ? 'Đang ghi lại…' : 'Ghi lại bữa ăn'}</Text></Pressable>
-  </ScrollView></KeyboardAvoidingView></SafeAreaView>;
+  const addRecentItemToDraft = (rf: { foodName: string; item: Omit<MealDraftItem, 'draftItemId'> }) => {
+    const existingIndex = draftItems.findIndex(
+      (item) =>
+        (rf.item.foodId && item.foodId === rf.item.foodId) ||
+        (rf.item.customFoodId && item.customFoodId === rf.item.customFoodId) ||
+        item.foodName === rf.foodName
+    );
+    if (existingIndex >= 0) {
+      setDraftItems((prev) =>
+        prev.map((item, idx) => (idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item))
+      );
+    } else {
+      const newItem: MealDraftItem = {
+        ...rf.item,
+        draftItemId: `draft-recent-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      };
+      setDraftItems((prev) => [...prev, newItem]);
+    }
+  };
+
+  const handleCustomFoodAdded = (customFood: CustomFood, selectedMealType: MealType) => {
+    setMealType(selectedMealType);
+    setCustomFoodsList((prev) => [customFood, ...prev]);
+    addCustomFoodToDraft(customFood);
+  };
+
+  const handleQuantityChange = (draftItemId: string, newQuantity: number) => {
+    setDraftItems((prev) =>
+      prev.map((item) => (item.draftItemId === draftItemId ? { ...item, quantity: newQuantity } : item))
+    );
+  };
+
+  const handleDeleteItem = (draftItemId: string) => {
+    setDraftItems((prev) => prev.filter((item) => item.draftItemId !== draftItemId));
+  };
+
+  const handleInfoPress = () => {
+    Alert.alert(
+      'Hướng dẫn tạo bữa ăn',
+      '• Tìm kiếm thực phẩm từ thư viện hoặc tự nhập món mới.\n• Nhấn nút [+] để thêm món vào bữa ăn.\n• Vuốt sang trái thẻ món ăn để xóa.\n• Thay đổi số lượng khẩu phần trực tiếp trên thẻ.\n• Bấm "Ghi nhận Bữa ăn" để hoàn tất.',
+      [{ text: 'Đã hiểu' }]
+    );
+  };
+
+  const handleCreateMeal = async () => {
+    if (draftItems.length === 0 || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const now = new Date();
+      if (params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date)) {
+        const [year, month, day] = params.date.split('-').map(Number);
+        now.setFullYear(year, month - 1, day);
+      }
+
+      const pad = (n: number) => (n < 10 ? '0' : '') + Math.floor(Math.abs(n));
+      const offset = -now.getTimezoneOffset();
+      const sign = offset >= 0 ? '+' : '-';
+      const eatenAt =
+        now.getFullYear() +
+        '-' +
+        pad(now.getMonth() + 1) +
+        '-' +
+        pad(now.getDate()) +
+        'T' +
+        pad(now.getHours()) +
+        ':' +
+        pad(now.getMinutes()) +
+        ':' +
+        pad(now.getSeconds()) +
+        sign +
+        pad(offset / 60) +
+        ':' +
+        pad(offset % 60);
+
+      const items: CreateMealItemInput[] = draftItems.map((item) => ({
+        referenceType: item.referenceType,
+        foodId: item.foodId,
+        customFoodId: item.customFoodId,
+        servingId: item.servingId,
+        quantity: item.quantity,
+      }));
+
+      const response = await mealApi.createMeal(
+        {
+          mealType,
+          eatenAt,
+          items,
+        },
+        createIdempotencyKey()
+      );
+
+      if (response.data) {
+        appendMeal(response.data);
+        router.back();
+      } else {
+        Alert.alert('Không thể ghi lại bữa ăn', response.error?.message ?? 'Đã xảy ra lỗi khi tạo bữa ăn.');
+      }
+    } catch {
+      Alert.alert('Lỗi hệ thống', 'Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <GestureHandlerRootView style={styles.flex}>
+      <SafeAreaView style={styles.safe}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.flex}
+        >
+          {/* Header Bar */}
+          <View style={styles.header}>
+            <Pressable
+              accessibilityLabel="Quay lại"
+              accessibilityRole="button"
+              style={styles.iconBtn}
+              onPress={() => router.back()}
+            >
+              <Ionicons color={colors.ink} name="chevron-back" size={24} />
+            </Pressable>
+
+            <View style={styles.flex} />
+
+            <Pressable
+              accessibilityLabel="Thông tin hướng dẫn"
+              accessibilityRole="button"
+              style={styles.iconBtn}
+              onPress={handleInfoPress}
+            >
+              <Ionicons color={colors.ink} name="information-circle-outline" size={24} />
+            </Pressable>
+          </View>
+
+          {/* Search Input Bar */}
+          <View style={styles.searchSection}>
+            <View style={styles.searchBar}>
+              <Ionicons color={colors.slate} name="search-outline" size={20} style={styles.searchIcon} />
+              <TextInput
+                accessibilityLabel="Tìm thực phẩm hoặc món ăn"
+                placeholder="Tìm thực phẩm hoặc món ăn"
+                placeholderTextColor={colors.slate}
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery ? (
+                <Pressable onPress={() => setSearchQuery('')} style={styles.clearBtn}>
+                  <Ionicons color={colors.slate} name="close-circle" size={18} />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Quick Action Chips */}
+          <View style={styles.chipsContainer}>
+            <ScrollView horizontal contentContainerStyle={styles.chipsScroll} showsHorizontalScrollIndicator={false}>
+              <Pressable
+                style={[styles.chip, activeChip === 'RECENT' && styles.chipActive]}
+                onPress={() => setActiveChip('RECENT')}
+              >
+                <Text style={[styles.chipText, activeChip === 'RECENT' && styles.chipTextActive]}>
+                  📋 Gần đây
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.chip, activeChip === 'FAVORITES' && styles.chipActive]}
+                onPress={() => setActiveChip('FAVORITES')}
+              >
+                <Text style={[styles.chipText, activeChip === 'FAVORITES' && styles.chipTextActive]}>
+                  ⭐ Tạo bởi tôi
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.chip, customSheetVisible && styles.chipActive]}
+                onPress={() => setCustomSheetVisible(true)}
+              >
+                <Text style={[styles.chipText, customSheetVisible && styles.chipTextActive]}>
+                  ✏️ Nhập món mới
+                </Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            {/* Custom Food / Recent List Header */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {activeChip === 'RECENT' ? 'Gần đây' : 'Tạo bởi tôi'}
+              </Text>
+              <Text style={styles.sectionCount}>
+                {activeChip === 'RECENT' ? `${recentFoods.length} món` : `${filteredCustomFoods.length} món`}
+              </Text>
+            </View>
+
+            {/* List based on activeChip */}
+
+            {activeChip === 'FAVORITES' && (
+              <View style={styles.foodList}>
+                {filteredCustomFoods.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>Chưa có món tủ nào. Nhấn &quot;Nhập món mới&quot; để tạo!</Text>
+                  </View>
+                ) : (
+                  filteredCustomFoods.map((customFood) => {
+                    const cals = Math.round(customFood.nutritionPerServing.caloriesKcal);
+                    const prot = customFood.nutritionPerServing.proteinG;
+                    const carb = customFood.nutritionPerServing.carbohydrateG;
+                    const fat = customFood.nutritionPerServing.fatG;
+
+                    return (
+                      <View key={customFood.customFoodId} style={styles.foodCard}>
+                        <View style={styles.foodInfo}>
+                          <Text style={styles.foodName}>{customFood.name}</Text>
+                          <Text style={styles.foodMeta}>
+                            {customFood.servingName} • {cals} kcal
+                          </Text>
+                          <View style={styles.macroBadges}>
+                            <Text style={styles.macroTag}>⚡ {prot}g protein</Text>
+                            <Text style={styles.macroTag}>🌿 {carb}g carb</Text>
+                            <Text style={styles.macroTag}>💧 {fat}g fat</Text>
+                          </View>
+                        </View>
+                        <Pressable
+                          accessibilityLabel={`Thêm ${customFood.name}`}
+                          accessibilityRole="button"
+                          style={styles.addBtn}
+                          onPress={() => addCustomFoodToDraft(customFood)}
+                        >
+                          <Ionicons color={colors.ink} name="add" size={20} />
+                        </Pressable>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            )}
+
+            {activeChip === 'RECENT' && (
+              <View style={styles.foodList}>
+                {recentFoods.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>Chưa có lịch sử bữa ăn gần đây.</Text>
+                  </View>
+                ) : (
+                  recentFoods.map((rf, idx) => (
+                    <View key={`recent-${idx}`} style={styles.foodCard}>
+                      <View style={styles.foodInfo}>
+                        <Text style={styles.foodName}>{rf.foodName}</Text>
+                        <Text style={styles.foodMeta}>
+                          {rf.servingName} • {Math.round(rf.caloriesKcal)} kcal
+                        </Text>
+                        <View style={styles.macroBadges}>
+                          <Text style={styles.macroTag}>⚡ {rf.item.nutrition.proteinG}g protein</Text>
+                          <Text style={styles.macroTag}>🌿 {rf.item.nutrition.carbohydrateG}g carb</Text>
+                          <Text style={styles.macroTag}>💧 {rf.item.nutrition.fatG}g fat</Text>
+                        </View>
+                      </View>
+                      <Pressable
+                        accessibilityLabel={`Thêm ${rf.foodName}`}
+                        accessibilityRole="button"
+                        style={styles.addBtn}
+                        onPress={() => addRecentItemToDraft(rf)}
+                      >
+                        <Ionicons color={colors.ink} name="add" size={20} />
+                      </Pressable>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* Meal Draft Section */}
+            <View style={styles.draftSectionHeader}>
+              <Text style={styles.draftTitle}>Bữa ăn đã chọn ({draftItems.length})</Text>
+              {draftItems.length > 0 ? (
+                <Pressable onPress={() => setDraftItems([])}>
+                  <Text style={styles.clearAllText}>Xóa tất cả</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            {draftItems.length === 0 ? (
+              <View style={styles.emptyDraftCard}>
+                <Ionicons color={colors.slate} name="basket-outline" size={32} />
+                <Text style={styles.emptyDraftText}>
+                  Chưa có món nào trong bữa ăn này. Hãy bấm dấu [+] ở danh sách trên để thêm.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.draftItemsList}>
+                {draftItems.map((item) => (
+                  <SwipeableMealItem
+                    key={item.draftItemId}
+                    caloriesKcal={item.nutrition.caloriesKcal}
+                    foodName={item.foodName}
+                    id={item.draftItemId}
+                    quantity={item.quantity}
+                    servingName={item.servingName}
+                    onDelete={() => handleDeleteItem(item.draftItemId)}
+                    onQuantityChange={(newQty) => handleQuantityChange(item.draftItemId, newQty)}
+                  />
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Docked Bottom Action Bar */}
+          <View style={styles.dockedFooter}>
+            <View style={styles.summaryRow}>
+              <View>
+                <Text style={styles.summaryLabel}>Tổng năng lượng</Text>
+                <Text style={styles.summaryValue}>{totalNutrition.caloriesKcal} kcal</Text>
+              </View>
+              <View style={styles.macroSummaryBadges}>
+                <View style={styles.macroPill}>
+                  <Text style={styles.macroPillLabel}>P:</Text>
+                  <Text style={styles.macroPillValue}>{totalNutrition.proteinG}g</Text>
+                </View>
+                <View style={styles.macroPill}>
+                  <Text style={styles.macroPillLabel}>C:</Text>
+                  <Text style={styles.macroPillValue}>{totalNutrition.carbohydrateG}g</Text>
+                </View>
+                <View style={styles.macroPill}>
+                  <Text style={styles.macroPillLabel}>F:</Text>
+                  <Text style={styles.macroPillValue}>{totalNutrition.fatG}g</Text>
+                </View>
+              </View>
+            </View>
+
+            <Pressable
+              accessibilityLabel={`Ghi nhận Bữa ăn (${draftItems.length} món)`}
+              accessibilityRole="button"
+              disabled={draftItems.length === 0 || isSubmitting}
+              style={[
+                styles.primarySubmitBtn,
+                (draftItems.length === 0 || isSubmitting) && styles.disabledSubmitBtn,
+              ]}
+              onPress={() => void handleCreateMeal()}
+            >
+              <Text style={styles.primarySubmitText}>
+                {isSubmitting ? 'Đang ghi nhận...' : `Ghi nhận Bữa ăn (${draftItems.length} món)`}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+
+        {/* Custom Food Sheet Modal */}
+        <CustomFoodSheet
+          initialMealType={mealType}
+          visible={customSheetVisible}
+          onClose={() => setCustomSheetVisible(false)}
+          onSuccess={handleCustomFoodAdded}
+        />
+      </SafeAreaView>
+    </GestureHandlerRootView>
+  );
 }
 
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.canvas }, flex: { flex: 1 }, content: { padding: 22, paddingBottom: 40 }, header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }, backText: { color: colors.ink, fontSize: 34, lineHeight: 36, marginTop: -4 }, title: { color: colors.ink, fontSize: 23, fontWeight: '700' }, spacer: { width: 44 }, subtitle: { color: colors.slate, fontSize: 15, lineHeight: 22, marginTop: 12, marginBottom: 18 }, label: { color: colors.ink, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 14 }, segment: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, segmentItem: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, backgroundColor: colors.surface }, segmentActive: { backgroundColor: colors.peach, borderColor: colors.apricot }, segmentText: { color: colors.slate, fontSize: 14 }, segmentTextActive: { color: colors.ink, fontWeight: '700' }, input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, minHeight: 52, borderRadius: 15, paddingHorizontal: 14, color: colors.ink, fontSize: 16 }, twoCol: { flexDirection: 'row', gap: 10 }, col: { flex: 1 }, nutritionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }, helper: { color: colors.slate, fontSize: 13 }, nutrientGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, nutrientCell: { width: '48%' }, nutrientLabel: { color: colors.slate, fontSize: 13, marginBottom: 5 }, nutrientInputWrap: { height: 48, borderWidth: 1, borderColor: colors.border, borderRadius: 13, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10 }, nutrientInput: { flex: 1, color: colors.ink, fontSize: 15 }, unit: { color: colors.slate, fontSize: 12 }, review: { backgroundColor: colors.peach, borderRadius: 18, padding: 16, marginTop: 22 }, reviewTitle: { color: colors.ink, fontSize: 15, fontWeight: '700' }, reviewText: { color: colors.slate, fontSize: 14, marginTop: 5 }, primary: { backgroundColor: colors.apricot, minHeight: 54, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginTop: 16 }, primaryText: { color: colors.ink, fontSize: 16, fontWeight: '700' }, disabled: { opacity: 0.5 } });
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  safe: { flex: 1, backgroundColor: colors.canvas },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownBtn: {
+    backgroundColor: colors.peach,
+    borderWidth: 1,
+    borderColor: colors.apricot,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  dropdownTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  searchSection: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 15,
+  },
+  clearBtn: {
+    padding: 4,
+  },
+  chipsContainer: {
+    marginBottom: 12,
+  },
+  chipsScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  chipActive: {
+    backgroundColor: colors.peach,
+    borderColor: colors.apricot,
+  },
+  chipText: {
+    color: colors.slate,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  chipTextActive: {
+    color: colors.ink,
+    fontWeight: '800',
+  },
+  chipAction: {
+    backgroundColor: colors.peach,
+    borderWidth: 1,
+    borderColor: colors.apricot,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  chipActionText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 160,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  sectionCount: {
+    color: colors.slate,
+    fontSize: 13,
+  },
+  foodList: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  foodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: 14,
+  },
+  foodInfo: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  foodName: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  foodMeta: {
+    color: colors.slate,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  macroBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  macroTag: {
+    color: colors.slate,
+    fontSize: 11,
+    fontWeight: '600',
+    backgroundColor: colors.canvas,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.peach,
+    borderWidth: 1,
+    borderColor: colors.apricot,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  addBtnActive: {
+    backgroundColor: colors.apricot,
+  },
+  addBtnBadge: {
+    color: colors.surface,
+    fontSize: 12,
+    fontWeight: '800',
+    marginLeft: 2,
+  },
+  emptyState: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyText: {
+    color: colors.slate,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  draftSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 8,
+  },
+  draftTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  clearAllText: {
+    color: colors.slate,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  emptyDraftCard: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  emptyDraftText: {
+    color: colors.slate,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  draftItemsList: {
+    gap: 2,
+  },
+  dockedFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  summaryLabel: {
+    color: colors.slate,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  summaryValue: {
+    color: colors.ink,
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  macroSummaryBadges: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  macroPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.peach,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 2,
+  },
+  macroPillLabel: {
+    color: colors.slate,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  macroPillValue: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  primarySubmitBtn: {
+    backgroundColor: colors.apricot,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledSubmitBtn: {
+    opacity: 0.5,
+  },
+  primarySubmitText: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+});
