@@ -97,9 +97,11 @@ function getCaloriesDomain(values: number[]): { min: number; max: number } {
   };
 }
 
-function getPointX(index: number, pointCount: number, width: number): number {
+function getPointX(index: number, pointCount: number, width: number, paddingX: number): number {
   if (pointCount <= 1) return width / 2;
-  return (index / (pointCount - 1)) * width;
+  const usableWidth = width - 2 * paddingX;
+  if (usableWidth <= 0) return width / 2;
+  return paddingX + (index / (pointCount - 1)) * usableWidth;
 }
 
 function formatDateLabel(date: string): string {
@@ -148,6 +150,36 @@ function buildPathSegments(points: TrendChartPoint[]): string[] {
   return pathSegments;
 }
 
+function createPolygonPoints(group: TrendChartPoint[], baselineY: number): string {
+  if (group.length === 0) return '';
+  const first = group[0];
+  const last = group[group.length - 1];
+  const pts = group.map((p) => `${p.x},${p.y}`).join(' ');
+  return `${first.x},${baselineY} ${pts} ${last.x},${baselineY}`;
+}
+
+export function buildAreaPolygonPoints(points: TrendChartPoint[], baselineY: number): string[] {
+  const areaPolygons: string[] = [];
+  let currentGroup: TrendChartPoint[] = [];
+
+  points.forEach((pt) => {
+    if (pt.y === null) {
+      if (currentGroup.length > 0) {
+        areaPolygons.push(createPolygonPoints(currentGroup, baselineY));
+        currentGroup = [];
+      }
+    } else {
+      currentGroup.push(pt);
+    }
+  });
+
+  if (currentGroup.length > 0) {
+    areaPolygons.push(createPolygonPoints(currentGroup, baselineY));
+  }
+
+  return areaPolygons;
+}
+
 export function getTrendMetricConfig(metric: TrendMetric): TrendMetricConfig {
   return metricConfigs[metric];
 }
@@ -161,6 +193,7 @@ export function buildTrendSeries(
 ): TrendSeries {
   const safeWidth = getSafeDimension(width);
   const safeHeight = getSafeDimension(height);
+  const paddingX = Math.max(20, Math.min(28, safeWidth * 0.08));
   const values = inputPoints.map((point) => getDisplayValue(point, metric));
   const measuredValues = values.filter((value): value is number => value !== null);
   const domain = metric === 'calories'
@@ -169,13 +202,14 @@ export function buildTrendSeries(
   const domainSpan = domain.max - domain.min || 1;
   const points = inputPoints.map((point, index): TrendChartPoint => {
     const value = values[index];
-    const x = getPointX(index, inputPoints.length, safeWidth);
+    const x = getPointX(index, inputPoints.length, safeWidth, paddingX);
+    const y = value === null ? null : safeHeight - ((value - domain.min) / domainSpan) * safeHeight;
 
     return {
       date: point.date,
       value,
       x,
-      y: value === null ? null : safeHeight - ((value - domain.min) / domainSpan) * safeHeight,
+      y,
     };
   });
   const periodDays: 7 | 30 = requestedPeriodDays ?? (inputPoints.length > 7 ? 30 : 7);
