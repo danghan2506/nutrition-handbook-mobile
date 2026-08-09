@@ -1,17 +1,16 @@
-import { Redirect, Tabs, type Href } from 'expo-router';
+import { Redirect, Tabs, type Href } from "expo-router";
 import {
   ChartNoAxesColumnIncreasing,
   House,
   Soup,
   UserRound,
-} from 'lucide-react-native';
-import React from 'react';
-import { ActivityIndicator } from 'react-native';
+} from "lucide-react-native";
+import { ActivityIndicator } from "react-native";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { View } from '@/components/ui/tw';
-import { useAuthSession } from '@/hooks/use-auth-session';
-import { usePersonalSessionBoundary } from '@/hooks/use-personal-session-boundary';
+import { HapticTab } from "@/components/haptic-tab";
+import { View } from "@/components/ui/tw";
+import { useAuthSession } from "@/hooks/use-auth-session";
+import { usePersonalSessionBoundary } from "@/hooks/use-personal-session-boundary";
 
 function TabIcon({
   color,
@@ -25,8 +24,9 @@ function TabIcon({
   return (
     <View
       className={`h-7 w-7 items-center justify-center rounded-xl ${
-        focused ? 'bg-[#FFF0E7]' : 'bg-transparent'
-      }`}>
+        focused ? "bg-[#FFF0E7]" : "bg-transparent"
+      }`}
+    >
       <Icon color={color} size={20} strokeWidth={2} />
     </View>
   );
@@ -43,7 +43,8 @@ export default function TabLayout() {
     return (
       <View
         accessibilityLabel="Đang tải..."
-        className="flex-1 items-center justify-center bg-cloud">
+        className="flex-1 items-center justify-center bg-cloud"
+      >
         <ActivityIndicator color="#FF9E7A" size="large" />
       </View>
     );
@@ -57,7 +58,8 @@ export default function TabLayout() {
     return (
       <View
         accessibilityLabel="Đang tải..."
-        className="flex-1 items-center justify-center bg-cloud">
+        className="flex-1 items-center justify-center bg-cloud"
+      >
         <ActivityIndicator color="#FF9E7A" size="large" />
       </View>
     );
@@ -69,18 +71,19 @@ export default function TabLayout() {
         headerShown: false,
         tabBarLabelPosition: 'below-icon',
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: '#FF9E7A',
-        tabBarInactiveTintColor: '#697386',
+        tabBarActiveTintColor: "#FF9E7A",
+        tabBarInactiveTintColor: "#697386",
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E7DDD3',
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E7DDD3",
         },
         tabBarLabelStyle: {
           fontSize: 10,
           lineHeight: 12,
-          fontWeight: '600',
+          fontWeight: "600",
         },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -95,7 +98,11 @@ export default function TabLayout() {
         options={{
           title: 'Phân tích',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} focused={focused} Icon={ChartNoAxesColumnIncreasing} />
+            <TabIcon
+              color={color}
+              focused={focused}
+              Icon={ChartNoAxesColumnIncreasing}
+            />
           ),
         }}
       />
